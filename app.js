@@ -83,7 +83,7 @@ const upload = multer({ storage });
 const store = MongoStore.create({
   mongoUrl: dbUrl,
   crypto: {
-      secret: "sajan",
+      secret: process.env.SECRET,
   },
   touchAfter: 24 * 3600,
 });
@@ -94,7 +94,7 @@ store.on("error", () => {
 
 const sessionOptions = {
   store,
-  secret: "sajan",
+  secret: process.env.SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: {
