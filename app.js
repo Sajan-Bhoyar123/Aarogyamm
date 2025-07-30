@@ -4,10 +4,10 @@ if(process.env.NODE_ENV != "production") {
 
 const RazorPay = require("razorpay");
 const crypto = require('crypto');
-const razorpay = new RazorPay({
+/*const razorpay = new RazorPay({
   key_id: process.env.RZP_KEY_ID,
   key_secret: process.env.RZP_KEY_SECRET
-});
+});*/
 
 const axios = require("axios");
 const express = require("express");
@@ -50,37 +50,40 @@ const Billing = require("./models/billing");
 
 // MONGODB CONNECTION
 
-// const MongoUrl = "mongodb://127.0.0.1:27017/aarogyam";
+ const MongoUrl = "mongodb://127.0.0.1:27017/aarogyam";
 const dbUrl = process.env.ATLASDB_URL;
 
+
+
+async function main() {
+  try {
+    await mongoose.connect(dbUrl, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000
+    });
+    console.log("Connected successfully to MongoDB Atlas");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+  }
+  //await mongoose.connect(MongoUrl);
+}
 main()
   .then(() => console.log("Connected to DB"))
   .catch((err) => console.error("Error:", err));
-
-async function main() {
-  await mongoose.connect(dbUrl);
-}
 
 // async function main() {
 //   await mongoose.connect(MongoUrl);
 // }
 
 // Configure Multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Ensure the "uploads" folder exists
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
+const { storage } = require('./cloudConfig.js');
 
 const upload = multer({ storage });
 
 const store = MongoStore.create({
   mongoUrl: dbUrl,
   crypto: {
-      secret: "process.env.SECRET",
+      secret: "sajan",
   },
   touchAfter: 24 * 3600,
 });
@@ -91,7 +94,7 @@ store.on("error", () => {
 
 const sessionOptions = {
   store,
-  secret: "process.env.SECRET",
+  secret: "sajan",
   resave: false,
   saveUninitialized: true,
   cookie: {
@@ -163,6 +166,7 @@ async function handleGoogleSignIn(req, res, Model, defaultRole) {
   }
 }
 
+
 app.post('/auth/google/patient', (req, res) => {
   handleGoogleSignIn(req, res, Patient, 'patient');
 });
@@ -215,7 +219,7 @@ app.post('/auth/google-login', async (req, res) => {
 
 // HOME PAGE
 
-app.get("/", (req, res) => res.render("dashboard"));
+app.get("/home", (req, res) => res.render("dashboard"));
 
 // AUTH ROUTES
 
@@ -226,12 +230,17 @@ app.use("/auth", authRouter);
 
 const patientRouter = require("./routes/patient");
 app.use("/patient", patientRouter);
-
+6
 // DOCTOR ROUTES
-
 const doctorRouter = require("./routes/doctor");
 app.use("/doctor", doctorRouter);
+//Header Route
+const HeaderRoute = require("./routes/header.js");
+app.use("/header",HeaderRoute);
 
+const SearchRoute = require("./routes/search.js");
+app.use("/city",SearchRoute);
+/*
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -271,7 +280,6 @@ app.post("/chat", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch AI response" });
   }
 });
-
 // Create an order endpoint
 app.post('/create-order', async (req, res) => {
   try {
@@ -317,7 +325,7 @@ app.post('/verify-payment/:billingId', async (req, res) => {
   } else {
     return res.status(400).json({ success: false, error: 'Invalid signature' });
   }
-});
+});*/
 
 // ERROR HANDLER
 
@@ -332,7 +340,7 @@ app.use((err, req, res, next) => {
 
 // SERVER LISTENING
 
-const PORT = process.env.PORT || 3000;
+const PORT =  3000;
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}/`);
 });

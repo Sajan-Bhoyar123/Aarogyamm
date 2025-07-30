@@ -1,21 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
 const path = require("path");
-
 const authController = require("../controllers/auth");
-
-// Configure Multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage });
-
+const multer  = require('multer')
+const {storage} = require("../cloudConfig.js")
+const upload = multer({ storage })
+const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
+const mapToken= process.env.MAP_TOKEN;
+const geocodingClient = mbxGeocoding({ accessToken: mapToken });
 // Auth routes
 router
   .route("/login")
@@ -34,7 +26,7 @@ router
 router
   .route("/signup/patient")
   .get(authController.patientSignUpPageRender)
-  .post(authController.patientSignedUp);
+  .post(upload.single("profile"),authController.patientSignedUp);
 
 router.get("/logout", authController.loggedOut);
 

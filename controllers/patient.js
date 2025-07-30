@@ -43,8 +43,8 @@ module.exports.upcomingAppointments = async (req, res, next) => {
     })
       .populate("patientId")
       .populate("doctorId");
-
-    res.render("patient/appointments/upcomingappointments", { appointments });
+    const patient = await Patient.findById(patientId);
+    res.render("patient/appointments/upcomingappointments", { appointments,patient });
   } catch (err) {
     console.error("Error fetching upcoming appointments:", err);
     req.flash("error", "Internal Server Error.");
@@ -69,8 +69,8 @@ module.exports.todaysAppointments = async (req, res, next) => {
     })
       .populate("patientId")
       .populate("doctorId");
-
-    res.render("patient/appointments/todaysappointments", { appointments });
+    const patient = await Patient.findById(patientId);
+    res.render("patient/appointments/todaysappointments", { appointments,patient });
   } catch (err) {
     console.error("Error fetching today's appointments:", err);
     req.flash("error", "Internal Server Error.");
@@ -93,8 +93,8 @@ module.exports.pastAppointments = async (req, res, next) => {
     })
       .populate("patientId")
       .populate("doctorId");
-
-    res.render("patient/appointments/pastappointments", { appointments });
+    const patient = await Patient.findById(patientId);
+    res.render("patient/appointments/pastappointments", { appointments,patient });
   } catch (err) {
     console.error("Error fetching past appointments:", err);
     req.flash("error", "Internal Server Error.");
@@ -127,6 +127,8 @@ module.exports.cancelAppointment = async (req, res, next) => {
  */
 module.exports.filterAppointments = async (req, res, next) => {
   try {
+    let patientId = req.user._id;
+    const patient = await Patient.findById(patientId);
     const { search, date, status, timeSlot } = req.query;
     let filter = {};
 
@@ -146,11 +148,11 @@ module.exports.filterAppointments = async (req, res, next) => {
 
     const referer = req.get("referer");
     if (referer && referer.includes("/pastappointments")) {
-      return res.render("patient/appointments/pastappointments", { appointments });
+      return res.render("patient/appointments/pastappointments", { appointment,patient });
     } else if (referer && referer.includes("/upcomingappointments")) {
-      return res.render("patient/appointments/upcomingappointments", { appointments });
+      return res.render("patient/appointments/upcomingappointments", { appointments,patient });
     } else {
-      return res.render("patient/appointments/todaysappointments", { appointments });
+      return res.render("patient/appointments/todaysappointments", { appointments,patient });
     }
   } catch (error) {
     console.error("Error filtering appointments:", error);
@@ -164,8 +166,11 @@ module.exports.filterAppointments = async (req, res, next) => {
  */
 module.exports.bookAppointmentPage = async (req, res, next) => {
   try {
-    const doctors = await Doctor.find();
-    res.render("patient/appointments/bookappointment", { doctors });
+    const patientId = req.user._id;
+    const patient = await Patient.findById(patientId);
+    let {doctorId} = req.params;
+    const doctor = await Doctor.findById(doctorId);
+    res.render("patient/appointments/bookappointment", { doctor,patient });
   } catch (err) {
     console.error("Error rendering appointment booking page:", err);
     req.flash("error", "Internal Server Error.");
@@ -179,8 +184,9 @@ module.exports.bookAppointmentPage = async (req, res, next) => {
 module.exports.healthRecords = async (req, res, next) => {
   try {
     const patientId = req.user._id;
+    const patient = await Patient.findById(patientId);
     const records = await HealthRecord.find({ patientId }).populate("doctorId");
-    res.render("patient/healthrecords", { records });
+    res.render("patient/healthrecords", { records,patient });
   } catch (err) {
     console.error("Error fetching health records:", err);
     req.flash("error", "Internal Server Error.");
@@ -195,7 +201,8 @@ module.exports.prescriptions = async (req, res, next) => {
   try {
     const patientId = req.user._id;
     const appointments = await Appointment.find({ patientId }).populate("doctorId");
-    res.render("patient/prescriptions", { appointments });
+     const patient = await Patient.findById(patientId);
+    res.render("patient/prescriptions", { appointments,patient });
   } catch (err) {
     console.error("Error fetching prescriptions:", err);
     req.flash("error", "Internal Server Error.");
@@ -240,7 +247,8 @@ module.exports.billings = async (req, res, next) => {
   try {
     const patientId = req.user._id;
     const bills = await Billing.find({ patientId }).populate("doctorId");
-    res.render("patient/billings", { bills });
+     const patient = await Patient.findById(patientId);
+    res.render("patient/billings", { bills,patient });
   } catch (err) {
     console.error("Error fetching billings:", err);
     req.flash("error", "Internal Server Error.");
@@ -290,7 +298,7 @@ module.exports.doctors = async (req, res, next) => {
       req.flash("error", "Patient not found.");
       return res.redirect("/patient/dashboard");
     }
-    res.render("patient/doctors", { doctors: patient.doctors });
+    res.render("patient/doctors", { doctors: patient.doctors,patient });
   } catch (error) {
     console.error("Error fetching doctors:", error);
     req.flash("error", "Internal Server Error.");
@@ -338,7 +346,7 @@ module.exports.bookAppointment = async (req, res, next) => {
     await Patient.findByIdAndUpdate(patientId, { $push: { appointments: savedAppointment._id } });
 
     req.flash("success", "Appointment booked successfully!");
-    res.redirect("/patient/bookappointment");
+    res.redirect("/patient/dashboard");
   } catch (error) {
     console.error("Error booking appointment:", error);
     req.flash("error", "Failed to book appointment. Please try again.");

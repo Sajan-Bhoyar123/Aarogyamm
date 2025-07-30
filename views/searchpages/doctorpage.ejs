@@ -1,0 +1,130 @@
+<%- layout("./layouts/patientboilerplate") %>
+<style>
+body {
+  background: #f4f9ff;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h2 {
+  font-weight: 600;
+}
+
+.doctor-card {
+  background-color: #fff;
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.doctor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.08);
+}
+
+.doctor-img-wrapper {
+  background: #f0f4ff;
+  padding: 4rem 0 0.5rem;  /* ⬅️ increased top padding */
+}
+
+
+.doctor-img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border: 3px solid #fff;
+  margin-top: -55px;
+  background-color: #ffffff;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.card-body p {
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.btn-outline-primary {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+</style>
+<div class="container mb-5">
+  <form action="/city/<%=doctors[0].location%>/specialization" method="post" class="row g-3 justify-content-center align-items-center">
+    <div class="col-md-4">
+      <select name="specialization" class="form-select form-select-lg" required>
+        <option value="">Select Specialization</option>
+         <option value="Allergist">Allergist / Immunologist</option>
+  <option value="Anesthesiologist">Anesthesiologist</option>
+  <option value="Cardiologist">Cardiologist</option>
+  <option value="Dermatologist">Dermatologist</option>
+  <option value="Endocrinologist">Endocrinologist</option>
+  <option value="ENT">ENT (Ear, Nose, Throat)</option>
+  <option value="Gastroenterologist">Gastroenterologist</option>
+  <option value="GeneralSurgeon">General Surgeon</option>
+  <option value="Geriatrician">Geriatrician</option>
+  <option value="Gynecologist">Gynecologist / Obstetrician</option>
+  <option value="Hematologist">Hematologist</option>
+  <option value="Hepatologist">Hepatologist</option>
+  <option value="InfectiousDisease">Infectious Disease Specialist</option>
+  <option value="InternalMedicine">Internal Medicine</option>
+  <option value="Nephrologist">Nephrologist</option>
+  <option value="Neurologist">Neurologist</option>
+  <option value="Neurosurgeon">Neurosurgeon</option>
+  <option value="Oncologist">Oncologist</option>
+  <option value="Ophthalmologist">Ophthalmologist</option>
+  <option value="OrthopedicSurgeon">Orthopedic Surgeon</option>
+  <option value="Pathologist">Pathologist</option>
+  <option value="Pediatrician">Pediatrician</option>
+  <option value="Physiatrist">Physiatrist (Rehabilitation)</option>
+  <option value="PlasticSurgeon">Plastic Surgeon</option>
+  <option value="Psychiatrist">Psychiatrist</option>
+  <option value="Pulmonologist">Pulmonologist</option>
+  <option value="Radiologist">Radiologist</option>
+  <option value="Rheumatologist">Rheumatologist</option>
+  <option value="Sexologist">Sexologist</option>
+  <option value="SportsMedicine">Sports Medicine Specialist</option>
+  <option value="ThoracicSurgeon">Thoracic Surgeon</option>
+  <option value="Urologist">Urologist</option>
+  <option value="VascularSurgeon">Vascular Surgeon</option>
+  <option value="Dentist">Dentist</option>
+  <option value="Psychologist">Psychologist</option>
+  <option value="Ayurveda">Ayurveda Specialist</option>
+  <option value="Homeopath">Homeopath</option>
+  <option value="Other">Other</option>
+        <!-- Add more as needed -->
+      </select>
+    </div>
+
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn btn-primary btn-lg">Search</button>
+    </div>
+  </form>
+</div>
+<div class="container py-5">
+    <h2 style="color: black;" class="text-center mb-5 text-primary">Top Doctors in <%=doctors[0].location %></h2>
+
+    <div class="row g-4">
+      <% doctors.forEach(doctor => { %>
+        <div class="col-md-6 col-lg-4">
+          <div class="card doctor-card h-100 shadow-sm">
+            <div class="card-img-top doctor-img-wrapper text-center">
+              <img src="<%= doctor.profile.url %>" alt="Dr. <%= doctor.username %>" class="doctor-img rounded-circle shadow-sm">
+            </div>
+            <div class="card-body text-center">
+              <h5 class="card-title mb-2 text-success"><%= doctor.username %></h5>
+              <p class="mb-1"><strong>Specialization:</strong> <%= doctor.specialization %></p>
+              <p class="mb-1"><strong>Hospital:</strong> <%= doctor.hospital %></p>
+              <p class="mb-1"><strong>City:</strong> <%= doctor.location %></p>
+              <p class="mb-2"><strong>Fees:</strong> ₹<%= doctor.consultantFees %></p>
+              <a href="/city/doctor/<%= doctor._id %>" class="btn btn-outline-primary btn-sm w-100 mt-2">Show Details</a>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>

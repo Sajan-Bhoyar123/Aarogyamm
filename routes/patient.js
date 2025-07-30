@@ -5,6 +5,7 @@ const { isAuthenticated, isAuthorized } = require("../middleware");
 const { appointmentSchema } = require('../schema');
 const Appointment = require("../models/appointment");
 const Billing = require("../models/billing");
+const Patient = require("../models/patient")
 
 // GET routes
 router.get("/dashboard", isAuthenticated, patientController.dashboard);
@@ -12,7 +13,7 @@ router.get("/upcomingappointments", isAuthenticated, patientController.upcomingA
 router.get("/todaysappointments", isAuthenticated, patientController.todaysAppointments);
 router.get("/pastappointments", isAuthenticated, patientController.pastAppointments);
 router.get("/filterappointments", isAuthenticated, patientController.filterAppointments);
-router.get("/bookappointment", isAuthenticated, patientController.bookAppointmentPage);
+router.get("/bookappointment/:doctorId", isAuthenticated, patientController.bookAppointmentPage);
 router.get("/healthrecords", isAuthenticated, patientController.healthRecords);
 router.get("/prescriptions", isAuthenticated, patientController.prescriptions);
 router.get("/doctors", isAuthenticated, patientController.doctors);
@@ -51,8 +52,10 @@ router
   .route("/bookappointment")
   .post(isAuthenticated, patientController.bookAppointment);
 
-router.get("/chat", (req, res) => {
-  res.render("patient/chat");
+router.get("/chat",async (req, res) => {
+   const patientId = req.user._id;
+  const patient = await Patient.findById(patientId);
+  res.render("patient/chat",{patient});
 });  
 
 module.exports = router;

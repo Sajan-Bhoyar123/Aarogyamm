@@ -1,5 +1,4 @@
 <%- layout("/layouts/boilerplate") %>
-
 <style>
   /* General Styles */
   body {
@@ -62,130 +61,8 @@
     align-items: center;
   }
 
-  /* Features Section */
-  .features-section {
-    padding: 5rem 0;
-    background-color: #fff;
-  }
-
-  .features-grid {
-    margin-top: 3rem;
-  }
-
-  .feature-card {
-    text-align: center;
-    padding: 2rem 1.5rem;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    margin-bottom: 2rem;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  }
-
-  .feature-icon {
-    margin-bottom: 1.5rem;
-  }
-
-  .feature-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #1A73E8;
-  }
-
-  .feature-card p {
-    color: #666;
-  }
-
-  /* Stats Section */
-  .stats-section {
-    padding: 4rem 0;
-    background-color: #0d9488;
-    color: white;
-    text-align: center;
-  }
-
-  .stat-item h2 {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .stat-item p {
-    font-size: 1.2rem;
-    opacity: 0.9;
-  }
-
-  /* Testimonial Section */
-  .testimonial-section {
-    padding: 5rem 0;
-    background-color: #f8f9fa;
-  }
-
-  .testimonial-card {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem;
-    border-radius: 10px;
-    background-color: white;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-  }
-
-  .testimonial-content p {
-    font-size: 1.2rem;
-    font-style: italic;
-    margin-bottom: 1.5rem;
-    color: #555;
-  }
-
-  .testimonial-author h4 {
-    margin-bottom: 0.2rem;
-    color: #1A73E8;
-  }
-
-  .testimonial-author p {
-    font-size: 0.9rem;
-    color: #777;
-  }
-
-  /* CTA Section */
-  .cta-section {
-    padding: 5rem 0;
-    background: linear-gradient(135deg, #1A73E8 0%, #1A73E8 100%);
-    color: white;
-    text-align: center;
-  }
-
-  .cta-content h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .cta-content p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    opacity: 0.9;
-  }
-
-  .cta-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-  }
 
   /* Button Styles (keeping the original colors) */
-  .btn-custom {
-    background-color: #1A73E8;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: 0.3s ease;
-    display: inline-block;
-  }
 
   .signup {
     border: 2px solid white;
@@ -217,16 +94,6 @@
     box-shadow: 0 5px 15px #1A73E8;
   }
 
-  /* CTA Section - White Button Variant */
-  .cta-section .btn-outline-custom {
-    border: 2px solid white;
-    color: white;
-  }
-
-  .cta-section .btn-outline-custom:hover {
-    background-color: white;
-    color: #1A73E8;
-  }
 
   /* Responsive Styles */
   @media (max-width: 991px) {
@@ -247,19 +114,8 @@
       margin-top: 2rem;
     }
 
-    .cta-content h2 {
-      font-size: 2rem;
-    }
-
-    .cta-buttons {
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .cta-buttons a {
-      width: 80%;
-    }
+  
+   
   }
 
   @media (max-width: 767px) {
@@ -275,21 +131,11 @@
       font-size: 1rem;
     }
 
-    .feature-card {
-      padding: 1.5rem 1rem;
-    }
+   
 
-    .stat-item {
-      margin-bottom: 2rem;
-    }
+    
 
-    .stat-item h2 {
-      font-size: 2.5rem;
-    }
-
-    .testimonial-content p {
-      font-size: 1rem;
-    }
+    
   }
 </style>
 
@@ -315,67 +161,4 @@
     </div>
   </section>
 
-  <!-- Features Section -->
-  <section id="features" class="features-section">
-    <div class="container">
-      <div class="section-header">
-        <h2>Comprehensive Healthcare Solutions</h2>
-        <p>Everything you need to manage healthcare operations efficiently</p>
-      </div>
-      
-      <div class="row features-grid">
-        <div class="col-md-4 feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-              <path d="M9 14h6"></path>
-              <path d="M9 10h6"></path>
-              <path d="M12 18h.01"></path>
-            </svg>
-          </div>
-          <h3>Medical Records</h3>
-          <p>Securely store and access patient medical records with ease, ensuring data privacy and compliance.</p>
-        </div>
-        
-        <div class="col-md-4 feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-              <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-          </div>
-          <h3>Appointment Management</h3>
-          <p>Streamline scheduling, reduce wait times, and optimize resource allocation with our intuitive system.</p>
-        </div>
-        
-        <div class="col-md-4 feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-              <circle cx="9" cy="7" r="4"></circle>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-            </svg>
-          </div>
-          <h3>Patient-Doctor Communication</h3>
-          <p>Enable seamless communication between healthcare providers and patients for better care coordination.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="cta-section">
-    <div class="container">
-      <div class="cta-content">
-        <h2>Empower Your Healthcare Journey</h2>
-        <p>Experience seamless medical record-keeping, appointment management, and more with Aarogyam.</p>
-        <div class="cta-buttons">
-          <a href="/auth/signup" class="btn-custom signup">Sign Up Now</a>
-          <a href="/auth/login" class="btn-outline-custom">Login</a>
-        </div>
-      </div>
-    </div>
-  </section>
 </div>

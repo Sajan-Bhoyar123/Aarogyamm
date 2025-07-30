@@ -1,0 +1,182 @@
+<%- layout("./layouts/boilerplate") %>
+<style>
+    /* Reset & Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+  background-color: #f9faff;
+}
+
+/* Hero Section */
+.about-hero {
+  background: linear-gradient(to right, #007bff, #00c6ff);
+  color: white;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.hero-text h1 {
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.hero-text p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn {
+  background: white;
+  color: #007bff;
+  padding: 0.6rem 1.2rem;
+  text-decoration: none;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: 0.3s ease;
+}
+
+.back-btn:hover {
+  background: #f0f0f0;
+}
+
+/* Icons Section */
+.about-icons {
+  padding: 3rem 2rem;
+  background: #ffffff;
+}
+
+.icons-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.icon-card {
+  background-color: #f0f8ff;
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.icon-card:hover {
+  transform: translateY(-6px);
+}
+
+.icon-card i {
+  font-size: 2.5rem;
+  color: #007bff;
+  margin-bottom: 1rem;
+}
+
+.icon-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  color: #007bff;
+}
+
+.icon-card p {
+  font-size: 0.95rem;
+  color: #444;
+}
+
+/* About Story Section */
+.about-story {
+  padding: 3rem 2rem;
+  background-color: #ffffff;
+}
+
+.story-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.about-story h2 {
+  font-size: 1.8rem;
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+  color: #007bff;
+}
+
+.about-story p {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero-text h1 {
+    font-size: 2rem;
+  }
+
+  .icon-card i {
+    font-size: 2rem;
+  }
+
+  .about-story h2 {
+    font-size: 1.5rem;
+  }
+}
+
+</style>
+<section class="about-hero">
+    <div class="hero-text">
+      <h1>About SmartHealth AI</h1>
+      <p>Revolutionizing healthcare with artificial intelligence, compassion, and connectivity.</p>
+      <a href="/home" class="back-btn">← Back to Home</a>
+    </div>
+  </section>
+
+  <!-- About Icons Section -->
+  <section class="about-icons">
+    <div class="icons-container">
+      <div class="icon-card">
+        <i class="fas fa-brain"></i>
+        <h3>AI Innovation</h3>
+        <p>We harness AI to detect, assist, and predict healthcare outcomes faster than ever before.</p>
+      </div>
+
+      <div class="icon-card">
+        <i class="fas fa-users"></i>
+        <h3>Human Connection</h3>
+        <p>Doctors and patients stay connected in real-time — from rural areas to metros.</p>
+      </div>
+
+      <div class="icon-card">
+        <i class="fas fa-shield-alt"></i>
+        <h3>Secure & Private</h3>
+        <p>We prioritize end-to-end encryption and patient data privacy above all.</p>
+      </div>
+
+      <div class="icon-card">
+        <i class="fas fa-heartbeat"></i>
+        <h3>24/7 Availability</h3>
+        <p>Your health doesn’t sleep. Neither do we. Emergency and AI care anytime.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Story Section -->
+  <section class="about-story">
+    <div class="story-container">
+      <h2>Our Story</h2>
+      <p>
+        SmartHealth AI was born from a need to simplify access to quality healthcare. With a team of doctors, data scientists, and designers, we crafted a system that blends human care with machine intelligence.
+      </p>
+
+      <h2>Our Vision</h2>
+      <p>
+        A world where early diagnosis, quick doctor consultation, and personal health insights are just a tap away. That’s the SmartHealth promise.
+      </p>
+    </div>
+  </section>

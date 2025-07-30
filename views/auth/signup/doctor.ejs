@@ -80,6 +80,31 @@
         padding: 1.5em;
       }
     }
+    .form-group {
+      margin: 20px;
+    }
+
+    .select-input {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background-color: white;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 18px;
+    }
+
+    .select-input:focus {
+      outline: none;
+      border-color: #4a90e2;
+      box-shadow: 0 0 3px rgba(74, 144, 226, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -91,7 +116,7 @@
         <!-- Email -->
         <div class="mb-3">
           <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-          <input type="email" name="doctor[email]" id="email" placeholder="Enter email" class="form-control" required>
+          <input type="email" name="email" id="email" placeholder="Enter email" class="form-control" required>
           <div class="invalid-feedback">Please provide a valid email.</div>
         </div>
       
@@ -99,58 +124,128 @@
           <!-- Username -->
           <div class="mb-3 col-md-6">
             <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-            <input type="text" name="doctor[username]" id="username" placeholder="Enter username" class="form-control" required>
+            <input type="text" name="username" id="username" placeholder="Enter username" class="form-control" required>
             <div class="invalid-feedback">Please provide a username.</div>
           </div>
           <!-- Password -->
           <div class="mb-3 col-md-6">
             <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-            <input type="password" name="doctor[password]" id="password" placeholder="Enter password" class="form-control" required autocomplete="new-password">
+            <input type="password" name="password" id="password" placeholder="Enter password" class="form-control" required autocomplete="new-password">
             <div class="invalid-feedback">Please provide a password.</div>
           </div>
         </div>
       
         <div class="row">
-          <!-- Specialization -->
-          <div class="mb-3 col-md-6">
-            <label for="specialization" class="form-label">Specialization <span class="text-danger">*</span></label>
-            <input type="text" name="doctor[specialization]" id="specialization" placeholder="Enter specialization" class="form-control" required>
-            <div class="invalid-feedback">Please provide a specialization.</div>
+          
+           <div  class=" mb-3 col-md-6">
+            <label for="doctor_specialty" class="form-label">Degree</label>
+              <select name="Degree" class="form-control" required id="doctor_specialty">
+                   <option value="">-- Select Doctor Degree --</option>
+                    <option value="MBBS">MBBS</option>
+                    <option value="BDS">BDS</option>
+                    <option value="BAMS">BAMS</option>
+                    <option value="BHMS">BHMS</option>
+                    <option value="MD">MD (Doctor of Medicine)</option>
+                    <option value="MS">MS (Master of Surgery)</option>
+                    <option value="DM">DM (Super Specialty)</option>
+                    <option value="MCh">MCh (Surgical Super Specialty)</option>
+                    <option value="PhD">PhD (Medical)</option>
+              </select>
+               </div>
+         
+          <div  class=" mb-3 col-md-6">
+            <label for="doctor_specialty" class="form-label">Specialization</label>
+              <select name="specialization" class="form-control" required id="doctor_specialty">
+  <option value="">-- Select Doctor Specialty --</option>
+  <option value="Allergist">Allergist / Immunologist</option>
+  <option value="Anesthesiologist">Anesthesiologist</option>
+  <option value="Cardiologist">Cardiologist</option>
+  <option value="Dermatologist">Dermatologist</option>
+  <option value="Endocrinologist">Endocrinologist</option>
+  <option value="ENT">ENT (Ear, Nose, Throat)</option>
+  <option value="Gastroenterologist">Gastroenterologist</option>
+  <option value="GeneralSurgeon">General Surgeon</option>
+  <option value="Geriatrician">Geriatrician</option>
+  <option value="Gynecologist">Gynecologist / Obstetrician</option>
+  <option value="Hematologist">Hematologist</option>
+  <option value="Hepatologist">Hepatologist</option>
+  <option value="InfectiousDisease">Infectious Disease Specialist</option>
+  <option value="InternalMedicine">Internal Medicine</option>
+  <option value="Nephrologist">Nephrologist</option>
+  <option value="Neurologist">Neurologist</option>
+  <option value="Neurosurgeon">Neurosurgeon</option>
+  <option value="Oncologist">Oncologist</option>
+  <option value="Ophthalmologist">Ophthalmologist</option>
+  <option value="OrthopedicSurgeon">Orthopedic Surgeon</option>
+  <option value="Pathologist">Pathologist</option>
+  <option value="Pediatrician">Pediatrician</option>
+  <option value="Physiatrist">Physiatrist (Rehabilitation)</option>
+  <option value="PlasticSurgeon">Plastic Surgeon</option>
+  <option value="Psychiatrist">Psychiatrist</option>
+  <option value="Pulmonologist">Pulmonologist</option>
+  <option value="Radiologist">Radiologist</option>
+  <option value="Rheumatologist">Rheumatologist</option>
+  <option value="Sexologist">Sexologist</option>
+  <option value="SportsMedicine">Sports Medicine Specialist</option>
+  <option value="ThoracicSurgeon">Thoracic Surgeon</option>
+  <option value="Urologist">Urologist</option>
+  <option value="VascularSurgeon">Vascular Surgeon</option>
+  <option value="Dentist">Dentist</option>
+  <option value="Psychologist">Psychologist</option>
+  <option value="Ayurveda">Ayurveda Specialist</option>
+  <option value="Homeopath">Homeopath</option>
+  <option value="Other">Other</option>
+</select>
+
           </div>
-          <!-- Experience -->
-          <div class="mb-3 col-md-6">
-            <label for="experience" class="form-label">Years of Experience <span class="text-danger">*</span></label>
-            <input type="number" name="doctor[experience]" id="experience" placeholder="Enter years of experience" class="form-control" required>
-            <div class="invalid-feedback">Please provide the years of experience.</div>
-          </div>
-        </div>
+          
+         </div>
       
         <div class="row">
           <!-- Hospital -->
           <div class="mb-3 col-md-6">
             <label for="hospital" class="form-label">Hospital Name <span class="text-danger">*</span></label>
-            <input type="text" name="doctor[hospital]" id="hospital" placeholder="Enter hospital name" class="form-control" required>
+            <input type="text" name="hospital" id="hospital" placeholder="Enter hospital name" class="form-control" required>
             <div class="invalid-feedback">Please provide the hospital name.</div>
+          </div>
+          <div class="mb-3 col-md-6">
+            <label for="location" class="form-label">location<span class="text-danger">*</span></label>
+            <input type="Text" name="location" id="location" placeholder="Enter the Location" class="form-control" required>
+            <div class="invalid-feedback">Please provide the exact Location Hospital</div>
+          </div>
+          <div class="mb-3 col-md-6">
+            <label for="country" class="form-label">Country <span class="text-danger">*</span></label>
+            <input type="Text" name="country" id="country" placeholder="Enter the country" class="form-control" >
+            <div class="invalid-feedback">Please provide the country Name Where Your Hospital Located.</div>
+          </div>
+          
+       </div>
+       <div class="row">
+          <div class="mb-3 col-md-6">
+            <label for="experience" class="form-label">Years of Experience <span class="text-danger">*</span></label>
+            <input type="number" name="experience" id="experience" placeholder="Enter years of experience" class="form-control" required>
+            <div class="invalid-feedback">Please provide the years of experience.</div>
           </div>
           <!-- Consultant Fees -->
           <div class="mb-3 col-md-6">
             <label for="consultantFees" class="form-label">Consultant Fees <span class="text-danger">*</span></label>
-            <input type="number" name="doctor[consultantFees]" id="consultantFees" placeholder="Enter fees" class="form-control" required>
+            <input type="number" name="consultantFees" id="consultantFees" placeholder="Enter fees" class="form-control" required>
             <div class="invalid-feedback">Please provide consultant fees.</div>
           </div>
-        </div>
+          </div>
+      
       
         <!-- Phone -->
         <div class="mb-3">
           <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
-          <input type="text" name="doctor[phone]" id="phone" placeholder="Enter phone number" class="form-control" required>
+          <input type="text" name="phone" id="phone" placeholder="Enter phone number" class="form-control" required>
           <div class="invalid-feedback">Please provide a valid phone number.</div>
         </div>
       
         <!-- Profile Image Upload -->
         <div class="mb-3">
           <label for="profile" class="form-label">Profile Image</label>
-          <input type="file" name="profile" id="profile" class="form-control" accept="image/*">
+          <input type="file" name="profile" id="profile" class="form-control" required accept="image/*">
         </div>
       
         <!-- Submit Button -->

@@ -1,0 +1,40 @@
+<%- layout("./layouts/patientboilerplate") %>
+<style>
+    body, html {
+  height: 100%;
+  background: linear-gradient(120deg, #d1eaff, #f6faff);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.search-wrapper {
+  height: 100vh;
+  padding: 20px;
+}
+
+.search-box {
+  max-width: 500px;
+  width: 100%;
+}
+
+.search-box h2 {
+  font-size: 2rem;
+}
+
+input::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+</style>
+  <section class="search-wrapper d-flex justify-content-center align-items-center">
+    <div class="search-box shadow-lg p-5 rounded-4 bg-white text-center">
+      <h2 class="mb-4 text-primary fw-bold">Find Doctors in Your City</h2>
+
+      <form action="/city/doctor" method="get">
+        <div class="input-group mb-3">
+          <input type="text" name="location" class="form-control form-control-lg" placeholder="Enter city name..." required>
+          <button class="btn btn-primary btn-lg" type="submit">Search</button>
+        </div>
+      </form>
+    </div>
+  </section>

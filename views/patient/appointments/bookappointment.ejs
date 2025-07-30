@@ -91,11 +91,8 @@
         
             <div class="mb-2">
                 <label class="form-label">Select Doctor</label>
-                <select name="patient[doctorId]" class="form-select" required>
-                    <option value="" selected disabled>Select a doctor</option>
-                    <% doctors.forEach(doctor => { %>
+                <select name="patient[doctorId]" class="form-select" required>  
                         <option value="<%= doctor._id %>"><%= doctor.username %></option>
-                    <% }); %>
                 </select>
                 <div class="invalid-feedback">Please select a doctor.</div>
             </div>

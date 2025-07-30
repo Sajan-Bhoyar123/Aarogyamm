@@ -20,3 +20,8 @@
     position: absolute;
     left: 100px;
 }
+#map{
+   height: 400px;
+  width: 90vw;
+  max-width: 100%;
+  }

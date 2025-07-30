@@ -1,0 +1,81 @@
+<%- layout("./layouts/patientboilerplate") %>
+<script>
+      const mapToken= "<%=process.env.MAP_TOKEN%>";
+      const data = <%- JSON.stringify(doctor) %>;
+</script>
+  <style>
+    body {
+      background-color: #f4f6f9;
+    }
+
+    .doctor-card {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .doctor-img {
+      width: 100%;
+      max-width: 250px;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #343a40;
+    }
+
+    .info-value {
+      color: #555;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 25px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .doctor-img {
+        height: auto;
+      }
+    }
+  </style>
+
+  <div class="container py-5">
+    <div class="doctor-card">
+      <div class="section-title">Doctor Profile</div>
+      <div class="row g-4">
+        <div class="col-md-4 text-center">
+          <img src="<%= doctor.profile.url %>" alt="Doctor Photo" class="doctor-img" />
+        </div>
+        <div class="col-md-8">
+          <p><span class="info-label">Name:</span> <span class="info-value"><%= doctor.username %></span></p>
+          <p><span class="info-label">Degree:</span> <span class="info-value"><%= doctor.Degree %></span></p>
+          <p><span class="info-label">Specialization:</span> <span class="info-value"><%= doctor.specialization %></span></p>
+          <p><span class="info-label">Experience:</span> <span class="info-value"><%= doctor.experience %> years</span></p>
+          <p><span class="info-label">Consultation Fee:</span> <span class="info-value">₹<%= doctor.consultantFees %></span></p>
+          <p><span class="info-label">Hospital Name:</span> <span class="info-value"><%= doctor.hospital %></span></p>
+          <p><span class="info-label">Hospital Location:</span> <span class="info-value"><%= doctor.location %></span></p>
+          <p><span class="info-label">Country:</span> <span class="info-value"><%= doctor.country %></span></p>
+          <a href="/patient/bookappointment/<%= doctor._id %>" class="btn btn-primary mt-3 px-4 py-2">
+              Book Appointment
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4 " style="width: 70%; margin-left: 15%;">
+            <p>Where You'll Be</p>
+            <div id="map"></div>
+     </div>
+  </div>
+  <script src="/map.js"></script>
+

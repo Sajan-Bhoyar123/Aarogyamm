@@ -88,11 +88,11 @@
     <%- include("../../includes/flash") %>
     <div class="form-container">
       <h1>Patient Sign up</h1>
-      <form action="/auth/signup/patient" method="POST" class="needs-validation" novalidate>
+      <form action="/auth/signup/patient" method="POST" class="needs-validation" novalidate enctype="multipart/form-data">
         <!-- Email -->
         <div class="mb-3">
           <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-          <input type="email" name="patient[email]" id="email" placeholder="Enter email" class="form-control" required>
+          <input type="email" name="email" id="email" placeholder="Enter email" class="form-control" required>
           <div class="invalid-feedback">Please provide a valid email.</div>
         </div>
       
@@ -100,13 +100,13 @@
           <!-- Username -->
           <div class="mb-3 col-md-6">
             <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-            <input type="text" name="patient[username]" id="username" placeholder="Enter username" class="form-control" required>
+            <input type="text" name="username" id="username" placeholder="Enter username" class="form-control" required>
             <div class="invalid-feedback">Please provide a username.</div>
           </div>
           <!-- Password -->
           <div class="mb-3 col-md-6">
             <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-            <input type="password" name="patient[password]" id="password" placeholder="Enter password" class="form-control" required autocomplete="new-password">
+            <input type="password" name="password" id="password" placeholder="Enter password" class="form-control" required autocomplete="new-password">
             <div class="invalid-feedback">Please provide a password.</div>
           </div>
         </div>
@@ -115,7 +115,7 @@
           <!-- Gender -->
           <div class="mb-3 col-md-6">
             <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
-            <select name="patient[gender]" id="gender" class="form-control" required>
+            <select name="gender" id="gender" class="form-control" required>
               <option value="">Select Gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -126,7 +126,7 @@
           <!-- Age -->
           <div class="mb-3 col-md-6">
             <label for="age" class="form-label">Age <span class="text-danger">*</span></label>
-            <input type="number" name="patient[age]" id="age" placeholder="Enter age" class="form-control" required>
+            <input type="number" name="age" id="age" placeholder="Enter age" class="form-control" required>
             <div class="invalid-feedback">Please provide your age.</div>
           </div>
         </div>
@@ -135,19 +135,19 @@
           <!-- Height -->
           <div class="mb-3 col-md-6">
             <label for="height" class="form-label">Height (cm)</label>
-            <input type="number" name="patient[height]" id="height" placeholder="Enter height in cm" class="form-control">
+            <input type="number" name="height" id="height" placeholder="Enter height in cm" class="form-control">
           </div>
           <!-- Weight -->
           <div class="mb-3 col-md-6">
             <label for="weight" class="form-label">Weight (kg)</label>
-            <input type="number" name="patient[weight]" id="weight" placeholder="Enter weight in kg" class="form-control">
+            <input type="number" name="weight" id="weight" placeholder="Enter weight in kg" class="form-control">
           </div>
         </div>
       
         <!-- Blood Type -->
         <div class="mb-3">
           <label for="bloodType" class="form-label">Blood Type</label>
-          <select name="patient[bloodType]" id="bloodType" class="form-control">
+          <select name="bloodType" id="bloodType" class="form-control">
             <option value="">Select Blood Type</option>
             <option value="A+">A+</option>
             <option value="A-">A-</option>
@@ -158,6 +158,10 @@
             <option value="AB+">AB+</option>
             <option value="AB-">AB-</option>
           </select>
+        </div>
+        <div class="mb-3">
+          <label for="profile" class="form-label">Profile Image</label>
+          <input type="file" name="profile" id="profile" class="form-control" required accept="image/*">
         </div>
       
         <!-- Submit Button -->

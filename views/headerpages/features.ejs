@@ -1,0 +1,176 @@
+<%- layout("./layouts/boilerplate") %>
+<style>
+    /* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9fbff;
+  color: #333;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(to right, #007bff, #00c6ff);
+  padding: 4rem 2rem;
+  text-align: center;
+  color: white;
+}
+
+.hero h1 {
+  font-size: 2.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.back-btn {
+  background: white;
+  color: #007bff;
+  padding: 0.6rem 1.2rem;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+
+.back-btn:hover {
+  background: #f0f0f0;
+}
+
+/* Features Grid */
+.features {
+  padding: 3rem 2rem;
+}
+
+.features-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-box {
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-box:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.feature-box i {
+  font-size: 2.5rem;
+  color: #007bff;
+  margin-bottom: 1rem;
+  transition: 0.3s;
+}
+
+.feature-box h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.6rem;
+  color: #007bff;
+}
+
+.feature-box p {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+}
+
+</style>
+<section class="hero">
+    <div class="hero-content">
+      <h1>Smart Features for Smarter Healthcare</h1>
+      <p>Discover how SmartHealth AI is transforming the way care is delivered.</p>
+      <a href="/home" class="back-btn">← Back to Home</a>
+    </div>
+  </section>
+
+  <!-- Features Grid -->
+  <section class="features">
+    <div class="features-container">
+
+      <div class="feature-box">
+        <i class="fas fa-stethoscope"></i>
+        <h3>AI Diagnosis</h3>
+        <p>Analyze symptoms instantly with advanced AI-driven predictions and guidance.</p>
+      </div>
+
+      <div class="feature-box">
+        <i class="fas fa-user-md"></i>
+        <h3>Doctor Consult</h3>
+        <p>Connect with certified doctors anytime via secure video and chat.</p>
+      </div>
+
+      <div class="feature-box">
+        <i class="fas fa-file-medical"></i>
+        <h3>Digital Health Records</h3>
+        <p>Access and manage health reports from anywhere in one secure location.</p>
+      </div>
+
+      <div class="feature-box">
+        <i class="fas fa-pills"></i>
+        <h3>Medicine Reminders</h3>
+        <p>Get smart alerts for taking medications, prescriptions, and follow-ups.</p>
+      </div>
+
+      <div class="feature-box">
+        <i class="fas fa-ambulance"></i>
+        <h3>Emergency Help</h3>
+        <p>One-tap access to ambulance services and nearby emergency care.</p>
+      </div>
+
+      <div class="feature-box">
+        <i class="fas fa-robot"></i>
+        <h3>AI Chat Assistant</h3>
+        <p>24/7 virtual assistant to guide, suggest and support your health journey.</p>
+      </div>
+       <div class="feature-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              <path d="M9 14h6"></path>
+              <path d="M9 10h6"></path>
+              <path d="M12 18h.01"></path>
+            </svg>
+            <h3>Medical Records</h3>
+          <p>Securely store and access patient medical records with ease, ensuring data privacy and compliance.</p>
+        </div>
+         <div class="feature-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1A73E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <h3>Patient-Doctor Communication</h3>
+          <p>Enable seamless communication between healthcare providers and patients for better care coordination.</p>
+        </div>
+    </div>
+  </section>

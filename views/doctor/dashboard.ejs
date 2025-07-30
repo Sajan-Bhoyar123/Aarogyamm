@@ -118,8 +118,10 @@
             <!-- <img src="" alt="Doctor Profile" class="doctor-profile"> -->
             <div class="welcome-text">
                 <h3>Welcome back</h3>
-                <i class="fa-solid fa-user fs-4"></i>
+              <!--  <i class="fa-solid fa-user fs-4"></i>-->
+                <img style="height: 50px; width: 50px; border-radius: 50%;object-fit: cover;" src="<%=doctor.profile.url%>" alt="">
                 <span class="doctor-name">&nbsp;Dr. <%= doctor.username %></span>
+                
                 <p>
                     Dedicated to providing the best healthcare services with <%= doctor.experience %> years of experience.
                 </p>
@@ -142,9 +144,13 @@
         <h3>Details:</h3>
         <ul>
             <li><strong>Specialization:</strong> <%= doctor.specialization %></li>
+             <li><strong>Degree:</strong> <%= doctor.Degree %></li>
             <li><strong>Experience:</strong> <%= doctor.experience %> years old</li>
             <li><strong>Hospital:</strong> <%= doctor.hospital %></li>
+            <li><strong>Location:</strong> <%= doctor.location %></li>
+            <li><strong>Country:</strong> <%= doctor.country %></li>
             <li><strong>ConsultantFees:</strong> <%= doctor.consultantFees %></li>
+            
             <li><strong>Phone:</strong> <%= doctor.phone %></li>
         </ul>
     </div>

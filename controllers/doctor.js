@@ -29,8 +29,9 @@ module.exports.dashboard = async (req, res, next) => {
 module.exports.appointments = async (req, res, next) => {
   try {
     const doctorId = req.user._id;
-    const appointments = await Appointment.find({ doctorId }).populate("patientId");
-    res.render("doctor/appointments", { appointments });
+    const appointments = await Appointment.find({ doctorId }).populate("patientId").populate("doctorId");
+    const doctor = await Doctor.findById(doctorId);
+    res.render("doctor/appointments", { appointments,doctor });
   } catch (err) {
     console.error("Error fetching doctor appointments:", err);
     req.flash("error", "Failed to load appointments. Please try again.");
@@ -42,12 +43,14 @@ module.exports.appointments = async (req, res, next) => {
 module.exports.renderAddAppointmentDetails = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
+     const doctorId = req.user._id;
+    const doctor = await Doctor.findById(doctorId);
     const appointment = await Appointment.findById(appointmentId).populate("patientId");
     if (!appointment) {
       req.flash("error", "Appointment not found.");
       return res.redirect("/doctor/appointments");
     }
-    res.render("doctor/addAppointment", { appointment });
+    res.render("doctor/addAppointment", { appointment ,doctor});
   } catch (err) {
     console.error("Error fetching appointment:", err);
     req.flash("error", "Failed to load appointment details. Please try again.");
@@ -60,14 +63,17 @@ module.exports.renderEditAppointment = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
     const appointment = await Appointment.findById(appointmentId).populate("patientId");
+    
     if (!appointment) {
       req.flash("error", "Appointment not found.");
       return res.redirect("/doctor/appointments");
     }
+     const doctorId = req.user._id;
+    const doctor = await Doctor.findById(doctorId);
     // Fetch associated health record and billing details
     const healthRecord = await HealthRecord.findOne({ patientId: appointment.patientId });
     const billing = await Billing.findOne({ patientId: appointment.patientId });
-    res.render("doctor/editAppointment", { appointment, healthRecord, billing });
+    res.render("doctor/editAppointment", { appointment, healthRecord, billing ,doctor});
   } catch (err) {
     console.error("Error fetching data for edit:", err);
     req.flash("error", "Failed to load appointment details. Please try again.");
@@ -102,7 +108,9 @@ module.exports.healthRecords = async (req, res, next) => {
       return res.redirect("/doctor/patients");
     }
     const healthrecords = await HealthRecord.find({ patientId });
-    res.render("doctor/healthrecords", { healthrecords, patient });
+     const doctorId = req.user._id;
+    const doctor = await Doctor.findById(doctorId);
+    res.render("doctor/healthrecords", { healthrecords, patient ,doctor});
   } catch (error) {
     console.error("Error fetching health records:", error);
     req.flash("error", "Failed to load health records. Please try again.");
@@ -120,7 +128,8 @@ module.exports.prescriptions = async (req, res, next) => {
       return res.redirect("/doctor/patients");
     }
     const appointments = await Appointment.find({ doctorId, patientId });
-    res.render("doctor/prescriptions", { appointments, patient });
+    const doctor = await Doctor.findById(doctorId);
+    res.render("doctor/prescriptions", { appointments, patient ,doctor});
   } catch (error) {
     console.error("Error fetching prescriptions:", error);
     req.flash("error", "Failed to load prescriptions. Please try again.");

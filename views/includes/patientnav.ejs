@@ -122,7 +122,8 @@
     <tbody>
       <tr>
         <td class="text-center" colspan="2">
-          <i class="fa-solid fa-user fa-2x mb-2 me-4"></i><br>
+           <img style="height: 50px; width: 50px; border-radius: 50%;object-fit: cover;margin-right: 25px;" src="<%=patient.profile.url%>" alt="">
+           <br>
           <small class="text-muted me-4">Patient</small>
         </td>
       </tr>
@@ -135,7 +136,7 @@
         <td>
           <!-- simply indent submenu with a nested table -->
           <table class="table table-borderless mb-0">
-            <tr><td><a href="/patient/bookappointment" class="text-decoration-none">• Book Appointment</a></td></tr>
+            <tr><td><a href="/city" class="text-decoration-none">• Book Appointment</a></td></tr>
             <tr><td><a href="/patient/upcomingappointments" class="text-decoration-none">• Upcoming</a></td></tr>
             <tr><td><a href="/patient/todaysappointments" class="text-decoration-none">• Today</a></td></tr>
             <tr><td><a href="/patient/pastappointments" class="text-decoration-none">• Past</a></td></tr>

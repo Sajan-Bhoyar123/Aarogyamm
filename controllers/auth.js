@@ -5,7 +5,9 @@ const Doctor = require("../models/doctor");
 const Patient = require("../models/patient");
 const ExpressError = require("../utils/ExpressError");
 const { patientSchema, doctorSchema } = require("../schema");
-
+const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
+const mapToken= process.env.MAP_TOKEN;
+const geocodingClient = mbxGeocoding({ accessToken: mapToken });
 /**
  * Render the login form.
  */
@@ -90,30 +92,34 @@ module.exports.loggedIn = async (req, res, next) => {
  * Handle doctor signup.
  */
 module.exports.doctorSignedUp = async (req, res, next) => {
-  try {
-    // Validate using Joi
-    const { error, value } = doctorSchema.validate(req.body);
-    if (error) {
-      const messages = error.details.map(err => err.message).join(', ');
-      console.error("Doctor Validation Error:", messages);
-      return next(new ExpressError(400, messages));
-    }
-
-    // Extract doctor details; note that the form data is nested under doctor
-    const { email, username, password, specialization, experience, hospital, consultantFees, phone } = req.body.doctor;
-    // Create new Doctor instance and store image path if provided
+ try{
+    const {email, username, password, specialization,Degree, experience, hospital,location,country, consultantFees, phone } = req.body;
+      let response =   await geocodingClient.forwardGeocode({
+               query: location ,
+               limit: 1,
+            })
+            .send()
+           ;
+    let url= req.file.path;
+    let filename = req.file.filename;
+    console.log("filename = ",filename);
+    console.log("url = ",url);
     const newDoctor = new Doctor({
       email,
       username,
       specialization,
+      Degree,
       experience,
       hospital,
+      location,
+      country,
       consultantFees,
       phone,
-      profile: req.file ? `/uploads/${req.file.filename}` : null
     });
+    newDoctor.profile = {url,filename};
+    console.log(newDoctor);
+    newDoctor.geometry = response.body.features[0].geometry;
 
-    // Register doctor with hashed password
     await Doctor.register(newDoctor, password);
 
     // Auto-login after signup
@@ -129,13 +135,13 @@ module.exports.doctorSignedUp = async (req, res, next) => {
         return res.redirect("/auth/signup/doctor");
       }
       req.flash("success", "Welcome to Aarogyam, Doctor!");
-      return res.redirect("/doctor/dashboard");
+      return res.redirect("/doctor/dashboard")
     });
-  } catch (err) {
-    console.error("Error during doctor signup:", err);
-    req.flash("error", "Signup failed. Please check your details and try again.");
-    return res.redirect("/auth/signup/doctor");
+  }catch(err){
+     console.log(err);
   }
+
+
 };
 
 /**
@@ -143,18 +149,13 @@ module.exports.doctorSignedUp = async (req, res, next) => {
  */
 module.exports.patientSignedUp = async (req, res, next) => {
   try {
-    // Validate using Joi
-    const { error, value } = patientSchema.validate(req.body);
-    if (error) {
-      const messages = error.details.map(err => err.message).join(', ');
-      console.error("Patient Validation Error:", messages);
-      return next(new ExpressError(400, messages));
-    }
 
-    const { username, email, password, gender, age, height, weight, bloodType } = req.body.patient;
+    const { username, email, password, gender, age, height, weight, bloodType } = req.body;
     // Create new Patient instance
     const newPatient = new Patient({ username, email, gender, age, height, weight, bloodType });
-
+    let filename = req.file.filename;
+    let url = req.file.path;
+    newPatient.profile = {filename,url};
     // Register patient with hashed password
     const registeredPatient = await Patient.register(newPatient, password);
 

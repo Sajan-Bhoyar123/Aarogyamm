@@ -10,10 +10,18 @@ const doctorSchema = new Schema ({
         unique: true
     },
     specialization: {
-        type: String
+        type: String,
+        required:true
+
     },
+
     experience: {
-        type: Number
+        type: Number,
+        required:true
+    },
+    Degree:{
+        type:String,
+        require:true
     },
     availabilitySlots: [
         {
@@ -22,16 +30,39 @@ const doctorSchema = new Schema ({
         }
     ],
     hospital: {
-        type: String
+        type: String,
+         required:true
+    },
+    
+    location:{
+        type:String,
+        required:true
+    },
+    country:{
+        type:String,
     },
     consultantFees: {
-        type: Number
+        type: Number,
+          required:true
     },
     phone: {
-        type: String
+        type: String,
+        required:true
     },
     profile: {
-        type: String,
+        filename: String,
+        url:String,
+    },
+     geometry: {
+         type: {
+            type: String, // Don't do `{ location: { type: String } }`
+            enum: ['Point'], // 'location.type' must be 'Point'
+            
+        },
+        coordinates: {
+            type: [Number],
+            required: true
+          }
     },
     role: {
         type: String,

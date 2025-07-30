@@ -29,6 +29,10 @@ const patientSchema = new Schema ({
         enum: ['admin', 'doctor', 'patient'],
         default: 'patient'
     },
+    profile:{
+        filename:String,
+        url:String
+    },
     healthRecord: [
         {
             type: Schema.Types.ObjectId,
