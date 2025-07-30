@@ -217,6 +217,9 @@ app.post('/auth/google-login', async (req, res) => {
   }
 });
 
+app.get("/", (req, res) => {
+  res.redirect("/home");
+});
 // HOME PAGE
 
 app.get("/home", (req, res) => res.render("dashboard"));
