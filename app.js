@@ -4,10 +4,10 @@ if(process.env.NODE_ENV != "production") {
 
 const RazorPay = require("razorpay");
 const crypto = require('crypto');
-/*const razorpay = new RazorPay({
+const razorpay = new RazorPay({
   key_id: process.env.RZP_KEY_ID,
   key_secret: process.env.RZP_KEY_SECRET
-});*/
+});
 
 const axios = require("axios");
 const express = require("express");
@@ -282,7 +282,7 @@ app.post("/chat", async (req, res) => {
     console.error("Together API Error:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch AI response" });
   }
-});
+});*/
 // Create an order endpoint
 app.post('/create-order', async (req, res) => {
   try {
@@ -328,7 +328,7 @@ app.post('/verify-payment/:billingId', async (req, res) => {
   } else {
     return res.status(400).json({ success: false, error: 'Invalid signature' });
   }
-});*/
+});
 
 // ERROR HANDLER
 
