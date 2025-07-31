@@ -248,7 +248,7 @@ module.exports.billings = async (req, res, next) => {
     const patientId = req.user._id;
     const bills = await Billing.find({ patientId }).populate("doctorId");
      const patient = await Patient.findById(patientId);
-    res.render("patient/billings", { bills,patient });
+    res.render("patient/billings", { bills,patient,razorpayKeyId: process.env.RZP_KEY_ID });
   } catch (err) {
     console.error("Error fetching billings:", err);
     req.flash("error", "Internal Server Error.");

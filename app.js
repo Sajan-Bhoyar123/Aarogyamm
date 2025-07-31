@@ -282,7 +282,7 @@ app.post("/chat", async (req, res) => {
     console.error("Together API Error:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch AI response" });
   }
-});*/
+});
 // Create an order endpoint
 app.post('/create-order', async (req, res) => {
   try {
@@ -296,6 +296,27 @@ app.post('/create-order', async (req, res) => {
     res.json({ success: true, order });
   } catch (err) {
     console.error('Razorpay order creation failed:', err);
+    res.status(500).json({ success: false, error: 'Order creation failed' });
+  }
+});*/
+app.post('/create-order', async (req, res) => {
+  try {
+    const { amount } = req.body;
+    console.log("🚀 Amount received:", amount);
+    console.log("🔑 Razorpay Key ID:", process.env.RZP_KEY_ID);
+
+    const options = {
+      amount: amount * 100,
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`,
+    };
+    const order = await razorpay.orders.create(options);
+
+    console.log("✅ Order created:", order);
+
+    res.json({ success: true, order });
+  } catch (err) {
+    console.error('❌ Razorpay order creation failed:', err);
     res.status(500).json({ success: false, error: 'Order creation failed' });
   }
 });
