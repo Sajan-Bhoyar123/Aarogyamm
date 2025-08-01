@@ -71,11 +71,7 @@ main()
   .then(() => console.log("Connected to DB"))
   .catch((err) => console.error("Error:", err));
 
-// async function main() {
-//   await mongoose.connect(MongoUrl);
-// }
 
-// Configure Multer for file uploads
 const { storage } = require('./cloudConfig.js');
 
 const upload = multer({ storage });
@@ -161,7 +157,7 @@ async function handleGoogleSignIn(req, res, Model, defaultRole) {
       return res.json({ success: true, role: user.role, isNewUser });
     });
   } catch (err) {
-    console.error(`🔥 Google Auth error (${defaultRole}):`, err);
+    console.error(` Google Auth error (${defaultRole}):`, err);
     return res.status(500).json({ success: false });
   }
 }
@@ -189,7 +185,7 @@ app.post('/auth/google-login', async (req, res) => {
         // No user found at all
         return res.status(404).json({ 
           success: false, 
-          message: "No account found with this email 😕"
+          message: "No account found with this email "
         });
       }
     }
@@ -243,67 +239,12 @@ app.use("/header",HeaderRoute);
 
 const SearchRoute = require("./routes/search.js");
 app.use("/city",SearchRoute);
-/*
-app.post("/chat", async (req, res) => {
-  try {
-    const { message } = req.body;
 
-    const payload = {
-      model: "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a kind, empathetic mental health assistant. Respond politely and respectfully even if the user uses rude language.",
-        },
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-      temperature: 0.7,
-    };
-
-    const response = await axios.post(
-      "https://api.together.xyz/v1/chat/completions",
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.TOGETHER_API_KEY}`,
-        },
-      }
-    );
-
-    const botResponse = response.data.choices?.[0]?.message?.content || "Sorry, I couldn't understand that.";
-
-    res.json({ choices: [{ message: { content: botResponse } }] });
-  } catch (error) {
-    console.error("Together API Error:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch AI response" });
-  }
-});
-// Create an order endpoint
-app.post('/create-order', async (req, res) => {
-  try {
-    const { amount } = req.body;      // amount in INR, e.g. 500 for ₹500
-    const options = {
-      amount: amount * 100,           // convert to paise
-      currency: 'INR',
-      receipt: `receipt_${Date.now()}`,
-    };
-    const order = await razorpay.orders.create(options);
-    res.json({ success: true, order });
-  } catch (err) {
-    console.error('Razorpay order creation failed:', err);
-    res.status(500).json({ success: false, error: 'Order creation failed' });
-  }
-});*/
 app.post('/create-order', async (req, res) => {
   try {
     const { amount } = req.body;
-    console.log("🚀 Amount received:", amount);
-    console.log("🔑 Razorpay Key ID:", process.env.RZP_KEY_ID);
+    console.log(" Amount received:", amount);
+    console.log(" Razorpay Key ID:", process.env.RZP_KEY_ID);
 
     const options = {
       amount: amount * 100,
@@ -312,29 +253,28 @@ app.post('/create-order', async (req, res) => {
     };
     const order = await razorpay.orders.create(options);
 
-    console.log("✅ Order created:", order);
+    console.log(" Order created:", order);
 
     res.json({ success: true, order });
   } catch (err) {
-    console.error('❌ Razorpay order creation failed:', err);
+    console.error(' Razorpay order creation failed:', err);
     res.status(500).json({ success: false, error: 'Order creation failed' });
   }
 });
 
 app.post('/verify-payment/:billingId', async (req, res) => {
-  // Extracts the details sent by the Razorpay handler on the frontend.
+ 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-  // Creates a secure HMAC SHA256 signature using your secret key - This mirrors what Razorpay sends in razorpay_signature.
+ 
   const hmac = crypto.createHmac('sha256', process.env.RZP_KEY_SECRET);
   hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
   const expectedSignature = hmac.digest('hex');
 
-// Compares your generated signature with Razorpay's - If they match: payment is legit.
+
   if (expectedSignature === razorpay_signature) {
    try {
       const billingId = req.params.billingId;
 
-      // ✅ Replace with your actual Mongoose model
       const billing = await Billing.findById(billingId);
       if (!billing) return res.status(404).json({ success: false, error: 'Billing record not found' });
 
@@ -351,7 +291,7 @@ app.post('/verify-payment/:billingId', async (req, res) => {
   }
 });
 
-// ERROR HANDLER
+
 
 app.all("*", (req, res, next) => {
   next(new ExpressError(404, "Page not found!"));
@@ -362,7 +302,7 @@ app.use((err, req, res, next) => {
   res.status(statusCode).render("error.ejs", { err });
 });
 
-// SERVER LISTENING
+
 
 const PORT =  3000;
 app.listen(PORT, () => {

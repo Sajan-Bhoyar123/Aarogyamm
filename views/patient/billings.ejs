@@ -110,7 +110,7 @@
           const verifyData = await verifyRes.json();
           if (verifyData.success) {
             alert('Payment successful!');
-            window.location.href = '/patient/dashboard';
+            window.location.href = '/patient/billings';
           } else {
             alert('Payment verification failed.');
           }
