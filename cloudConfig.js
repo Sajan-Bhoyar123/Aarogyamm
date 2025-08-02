@@ -11,7 +11,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'Wanderlust_Dev',
+    folder: 'Healthare_System',
     allowerdFormats :["png","jpg","jpeg","pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt","png","jpg","jpeg"],
     
   },
