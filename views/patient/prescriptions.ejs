@@ -1,172 +1,197 @@
 <%- layout("./layouts/patientboilerplate") %>
 
-<div class="prescriptions-container container">
-    <div class="page-header">
-        <h2>Prescriptions</h2>
+<div class="page-container container my-5">
+    <div class="page-header mb-4">
+        <h2 class="h3 font-weight-bold">Prescriptions</h2>
     </div>
 
-    <div class="record-container table-responsive">
-        <table class="prescriptions-table container-fluid">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Reason</th>
-                    <th>Created by</th>
-                    <th>Date</th>
-                    <th>Disease</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (appointments.length === 0) { %>
+    <div class="list-container">
+        <div class="table-responsive">
+            <table class="items-table table align-middle">
+                <thead>
                     <tr>
-                        <td colspan="6">No prescriptions found.</td>
+                        <th>#</th>
+                        <th>Reason</th>
+                        <th>Created by</th>
+                        <th>Date</th>
+                        <th>Disease</th>
+                        <th class="text-center">Actions</th>
                     </tr>
-                <% } else { %>
-                    <% appointments.forEach((record, index) => { %>
+                </thead>
+                <tbody>
+                    <% if (appointments.length === 0) { %>
                         <tr>
-                            <td><%= index + 1 %></td>
-                            <td><%= record.reason %></td>
-                            <td class="doctor-name"><%= record.doctorId.username %></td>
-                            <td><%= new Date(record.createdAt).toLocaleDateString() %></td>
-                            <td>
-                                <% if (record.disease) { %>
-                                    <span class="disease-tag <%= record.disease.replace(/\s+/g, '-') %>">
-                                        <%= record.disease %>
-                                    </span>
-                                <% } else { %>
-                                    <span>—</span>
-                                <% } %>
-                            </td>
-                            <td class="actions">
-                                <% if (record.attachments && record.attachments.length > 0) { %>
-                                    <% record.attachments.forEach(file => { %>
-                                        <div class="d-flex">
-                                            <a href="<%= file %>" class="action-icon view" title="View" target="_blank">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="<%= file %>" class="action-icon download" title="Download" target="_blank" download>
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                            <a href="#" class="action-icon delete" title="Delete" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setAppointmentId('<%= record._id %>', '<%= file %>')">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                        </div>
-                                    <% }) %>
-                                <% } else { %>
-                                    <span>No files</span>
-                                <% } %>
-                            </td>
+                            <td colspan="6" class="text-center py-5">No prescriptions found.</td>
                         </tr>
-                    <% }); %>
-                <% } %>
-            </tbody>
-        </table>
+                    <% } else { %>
+                        <% appointments.forEach((record, index) => { %>
+                            <tr>
+                                <td class="font-weight-bold"><%= index + 1 %></td>
+                                <td class="reason-cell"><%= record.reason %></td>
+                                <td class="doctor-name">
+                                    <a href="#"><%= record.doctorId.username %></a>
+                                </td>
+                                <td><%= new Date(record.createdAt).toLocaleDateString() %></td>
+                                <td>
+                                    <% if (record.disease) { %>
+                                        <span class="disease-name">
+                                            <%= record.disease %>
+                                        </span>
+                                    <% } else { %>
+                                        <span class="text-muted">—</span>
+                                    <% } %>
+                                </td>
+                                <td class="actions-cell">
+                                    <% if (record.attachments && record.attachments.length > 0) { %>
+                                        <% for (let file of record.attachments) { %>
+                                            <% if (file) { %>
+                                                <a href="<%= file %>" class="action-icon view" title="View" target="_blank">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="<%= file %>" class="action-icon download" title="Download" download>
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                <a href="#" class="action-icon delete" title="Delete" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setAppointmentId('<%= record._id %>', '<%= file %>')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            <% } %>
+                                        <% } %>
+                                    <% } else { %>
+                                        <span class="text-muted">No files</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="cancelModalLabel">Confirm Deletion</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this prescription file?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-          Are you sure you want to delete this prescription?
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-          <form id="deleteForm" method="POST">
-            <button type="submit" class="btn btn-danger">Yes, Delete</button>
-          </form>
-        </div>
-      </div>
     </div>
 </div>
 
 <script>
     function setAppointmentId(recordId, filePath) {
-        // Select the form inside the modal
-        const cancelForm = document.getElementById("deleteForm");
-
-        // Set the form action dynamically
-        cancelForm.action = `/patient/prescriptions/delete/${recordId}?file=${encodeURIComponent(filePath)}`;
+        const deleteForm = document.getElementById("deleteForm");
+        if (deleteForm) {
+            deleteForm.action = `/patient/prescriptions/delete/${recordId}?file=${encodeURIComponent(filePath)}`;
+        }
     }
 </script>
 
 <style>
-    .prescriptions-container {
+    body {
+        background-color: #eef2f7; /* Light blue-gray background */
+    }
+
+    .page-container {
+        max-width: 1300px;
+    }
+
+    .page-header h2 {
+        color: #333;
+        font-weight: 600;
+    }
+
+    .list-container {
+        background: #ffffff;
+        border-radius: 8px;
         padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     }
 
-    .page-header {
-        font-size: 22px;
-        font-weight: bold;
-        margin-bottom: 15px;
-    }
-
-    .record-container {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .prescriptions-table {
+    .items-table {
         width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
+        border-collapse: collapse; /* Important for border handling */
+        margin: 0;
     }
 
-    .prescriptions-table th, .prescriptions-table td {
-        padding: 12px;
+    .items-table thead tr {
+        border-bottom: 2px solid #dee2e6; /* Header bottom border */
+    }
+
+    .items-table th {
+        padding: 15px 12px;
+        color: #555;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         text-align: left;
-        border-bottom: 1px solid #ddd;
     }
 
-    .prescriptions-table th {
-        background-color: #f8f9fa;
+    .items-table tbody tr {
+        border-bottom: 1px solid #e9ecef; /* The horizontal line separator */
     }
 
-    .doctor-name {
+    .items-table tbody tr:last-child {
+        border-bottom: none; /* No line for the last item */
+    }
+
+    .items-table td {
+        padding: 18px 12px;
+        vertical-align: middle;
+        font-size: 15px;
+        color: #333;
+    }
+
+    .doctor-name a {
         color: #007bff;
-        font-weight: bold;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    
+    .doctor-name a:hover {
+        text-decoration: underline;
     }
 
-    .disease-tag {
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 12px;
-        font-weight: bold;
+    .reason-cell {
+        max-width: 280px;
+    }
+    
+    .disease-name {
+        font-weight: 500;
+        text-transform: capitalize;
     }
 
-    /* Disease Colors */
-    .disease-tag.Fever { background: #ff6666; color: white; }
-    .disease-tag.Cholera { background: #66cc99; color: white; }
-    .disease-tag.Jaundice { background: #cc99ff; color: white; }
-    .disease-tag.Typhoid { background: #ffcc66; color: white; }
-    .disease-tag.Malaria { background: #ff9966; color: white; }
-    .disease-tag.Infection { background: #66cccc; color: white; }
-
-    .actions {
-        display: flex;
-        gap: 10px;
+    .actions-cell {
+        text-align: center;
+        min-width: 120px;
     }
 
     .action-icon {
-        font-size: 18px;
+        font-size: 17px;
         text-decoration: none;
-        padding: 5px;
-        border-radius: 5px;
+        margin: 0 6px; /* Space between icons */
+        transition: opacity 0.2s ease;
     }
-
-    .download { color: #6f42c1; }
-    .view { color: #28a745; }
-    .delete { color: #dc3545; }
 
     .action-icon:hover {
         opacity: 0.7;
     }
+
+    .view { color: #28a745; } /* Green */
+    .download { color: #6f42c1; } /* Purple */
+    .delete { color: #dc3545; } /* Red */
+
 </style>

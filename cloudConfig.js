@@ -8,12 +8,17 @@ cloudinary.config({
     api_secret:process.env.CLOUD_API_SECRET,
 });
 
+// Force ALL files to be uploaded as raw files - this ensures PDFs work properly
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'Wanderlust_Dev',
-    allowerdFormats :["png","jpg","jpeg","pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt","png","jpg","jpeg"],
-    
+    folder: 'Health',
+    allowedFormats: ["png","jpg","jpeg","pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"],
+    resource_type: 'raw', // Force all files to be raw - this fixes the PDF issue
   },
 });
-module.exports={cloudinary,storage}
+
+module.exports = {
+  cloudinary,
+  storage
+};

@@ -71,14 +71,27 @@
                             <p><strong>Attachments:</strong></p>
                             <ul class="list-unstyled">
                                 <% record.attachments.forEach((attachment, index) => { %>
-                                    <li>
-                                        <a href="<%= attachment %>" class="btn btn-success" target="_blank">
-                                            <i class="fas fa-eye"></i> View 
-                                        </a>
-                                        <a href="<%= attachment %>" class="btn btn-primary" title="Download" target="_blank" download>
-                                            <i class="fas fa-file-download"></i> Download
-                                        </a>
-                                    </li>
+                                    <% if (attachment) { %>
+                                        <% 
+                                            const isPdf = attachment.toLowerCase().includes('.pdf');
+                                            let viewUrl = attachment;
+                                            let downloadUrl = attachment;
+                                            
+                                            if (isPdf) {
+                                                // For PDFs: View opens in browser, Download forces download
+                                                viewUrl = attachment.replace('/upload/', '/upload/fl_attachment/');
+                                                downloadUrl = attachment.replace('/upload/', '/upload/fl_attachment/');
+                                            }
+                                        %>
+                                        <li>
+                                            <a href="<%= viewUrl %>" class="btn btn-success" target="_blank">
+                                                <i class="fas fa-eye"></i> View 
+                                            </a>
+                                            <a href="<%= downloadUrl %>" class="btn btn-primary" title="Download" target="_blank" download>
+                                                <i class="fas fa-file-download"></i> Download
+                                            </a>
+                                        </li>
+                                    <% } %>
                                 <% }); %>
                             </ul>
                         <% } else { %>

@@ -184,14 +184,9 @@ module.exports.loggedOut = (req, res, next) => {
       console.error("Logout error:", err);
       req.flash("error", "Logout failed. Please try again.");
       return res.redirect("back");
+    }else{
+      res.redirect("/home");
     }
-    req.session.regenerate((err) => {
-      if (err) {
-        console.error("Session regeneration error:", err);
-        req.flash("error", "Error clearing session. Please try again.");
-        return res.redirect("back");
-      }
-      return res.redirect("/auth/login");
-    });
+   
   });
 };

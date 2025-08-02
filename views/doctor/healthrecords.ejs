@@ -35,14 +35,27 @@
                                 <p><strong>Attachments:</strong></p>
                                 <ol>
                                     <% for (let file of record.attachments) { %>
-                                        <li class="ps-2">
-                                            <a href="<%= file %>" class="btn btn-primary me-2" target="_blank">
-                                                <i class="fa-solid fa-eye"></i> View
-                                            </a>
-                                            <a href="<%= file %>" class="btn btn-success" target="_blank" download>
-                                                <i class="fa-solid fa-download"></i> Download
-                                            </a>
-                                        </li>
+                                        <% if (file) { %>
+                                            <% 
+                                                const isPdf = file.toLowerCase().includes('.pdf');
+                                                let viewUrl = file;
+                                                let downloadUrl = file;
+                                                
+                                                if (isPdf) {
+                                                    // For PDFs: View opens in browser, Download forces download
+                                                    viewUrl = file.replace('/upload/', '/upload/fl_attachment/');
+                                                    downloadUrl = file.replace('/upload/', '/upload/fl_attachment/');
+                                                }
+                                            %>
+                                            <li class="ps-2">
+                                                <a href="<%= viewUrl %>" class="btn btn-primary me-2" target="_blank">
+                                                    <i class="fa-solid fa-eye"></i> View
+                                                </a>
+                                                <a href="<%= downloadUrl %>" class="btn btn-success" target="_blank" download>
+                                                    <i class="fa-solid fa-download"></i> Download
+                                                </a>
+                                            </li>
+                                        <% } %>
                                     <% } %>
                                 </ol>
                             <% } else { %>
