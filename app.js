@@ -8,7 +8,8 @@ const razorpay = new RazorPay({
   key_id: process.env.RZP_KEY_ID,
   key_secret: process.env.RZP_KEY_SECRET
 });
-
+const API_URL = "https://api.together.xyz/v1/chat/completions"; 
+const API_KEY = process.env.TOGETHER_API_KEY;
 const axios = require("axios");
 const express = require("express");
 const mongoose = require("mongoose");
@@ -311,7 +312,35 @@ app.post('/verify-payment/:billingId', async (req, res) => {
   }
 });
 
+app.post("/chat", async (req, res) => {
+    try {
+        const { message } = req.body;
 
+        const response = await axios.post(
+            "https://api.together.xyz/v1/chat/completions",
+            {
+                model: "mistralai/Mistral-7B-Instruct-v0.1", // Ensure correct model name
+                messages: [{ role: "user", content: message }],
+                temperature: 0.7
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_KEY}`
+                }
+            }
+        );
+
+        // Extract the correct response format
+        const botResponse = response.data.choices?.[0]?.message?.content || "Sorry, I couldn't understand that.";
+        
+        // Send in correct JSON format
+        res.json({ choices: [{ message: { content: botResponse } }] });
+    } catch (error) {
+        console.error("Error:", error.response ? error.response.data : error.message);
+        res.status(500).json({ error: "Failed to fetch AI response" });
+    }
+});
 
 app.all("*", (req, res, next) => {
   next(new ExpressError(404, "Page not found!"));
