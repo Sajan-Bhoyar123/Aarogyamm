@@ -5,17 +5,17 @@ A digital platform designed to securely manage student healthcare records, strea
 Project Progress (50% Completed)
 At this stage, we have implemented:
 
-✅ User Authentication – Secure login/signup using JWT-based authentication.
+ User Authentication – Secure login/signup using JWT-based authentication.
 
-✅ Student Dashboard – View medical history, prescriptions, and past treatments.
+  -Student Dashboard – View medical history, prescriptions, and past treatments.
 
-✅ Health Record Storage – Backend API to store & retrieve medical records.
+  - Health Record Storage – Backend API to store & retrieve medical records.
 
-✅ Automated Leave Documentation – System generates medical certificates and leave requests.
+  -Automated Leave Documentation – System generates medical certificates and leave requests.
 
-✅ Appointment Booking System – Initial setup for scheduling doctor appointments.
+  -Appointment Booking System – Initial setup for scheduling doctor appointments.
 
-✅ Basic UI/UX – Web & mobile interfaces designed using React.js and Flutter.
+  - Basic UI/UX – Web & mobile interfaces designed using React.js and Flutter.
 
 Tech Stack
 
@@ -23,13 +23,13 @@ Tech Stack
 
 🗄 Backend: Node.js with Express.js
 
-💾 Database: MongoDB
+    Database: MongoDB
 
-🔐 Authentication: JWT & bcrypt
+   Authentication: JWT & bcrypt
 
-📡 Notifications: Twilio / Firebase Cloud Messaging
+    Notifications: Twilio / Firebase Cloud Messaging
 
-☁ Cloud Storage: AWS S3 (for medical reports & prescriptions)
+   Cloud Storage: AWS S3 (for medical reports & prescriptions)
 
 How to Run the Project
 
@@ -57,8 +57,8 @@ AWS_ACCESS_KEY=your_aws_access_key
 AWS_SECRET_KEY=your_aws_secret_key
 
 Current Limitations & Next Steps
-🔹 Pending Features: Appointment confirmation, advanced filtering, and notifications, document generation.
+  Pending Features: Appointment confirmation, advanced filtering, and notifications, document generation.
 
-🔹 Next Focus: Enhancing UI, securing data with encryption, and integrating email/SMS notifications.
+  Next Focus: Enhancing UI, securing data with encryption, and integrating email/SMS notifications.
 
-This guide ensures the organizers can set up and test the project easily. Let me know if you need any refinements! 🚀
+This guide ensures the organizers can set up and test the project easily. Let me know if you need any refinements! 

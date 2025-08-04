@@ -2,57 +2,70 @@
 
 <style>
     .dashboard-container {
-        padding: 0 20px 20px 20px;
+        padding: 20px;
         color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    .dashboard-header span {
-        font-size: 14px;
-        color: #888;
+    .dashboard-header h2 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 15px;
     }
 
     .welcome-card {
-        background: #f8f9fd;
-        padding: 20px;
-        border-radius: 12px;
+        background: linear-gradient(135deg, #f0f4ff, #ffffff);
+        padding: 25px;
+        border-radius: 15px;
         display: flex;
         align-items: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        margin-top: 15px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        transition: transform 0.2s ease;
+    }
+
+    .welcome-card:hover {
+        transform: scale(1.01);
     }
 
     .welcome-content {
         display: flex;
         align-items: center;
         gap: 20px;
+        flex-wrap: wrap;
     }
 
     .doctor-profile {
         width: 80px;
         height: 80px;
         border-radius: 50%;
+        object-fit: cover;
     }
 
     .welcome-text h3 {
-        font-weight: normal;
-        color: #666;
+        font-weight: 600;
+        color: #444;
+        font-size: 20px;
+        margin-bottom: 5px;
     }
 
     .doctor-name {
         color: #007bff;
         font-size: 22px;
-        font-weight: bold;
+        font-weight: 700;
     }
 
     .welcome-text p {
-        font-size: 14px;
+        font-size: 15px;
         color: #555;
         max-width: 600px;
-        line-height: 1.5;
+        margin-top: 8px;
+        line-height: 1.6;
     }
 
     .stats-container {
         display: flex;
+        flex-wrap: wrap;
         justify-content: space-between;
         gap: 20px;
         margin-top: 20px;
@@ -60,15 +73,22 @@
 
     .stat-card {
         background: white;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
         flex: 1;
+        min-width: 150px;
         text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
     }
 
     .stat-number {
-        font-size: 24px;
+        font-size: 28px;
         font-weight: bold;
         color: #333;
     }
@@ -76,35 +96,57 @@
     .stat-label {
         color: #666;
         font-size: 14px;
+        margin-top: 4px;
     }
 
     .doctor-info {
-        margin-top: 20px;
-        background: white;
-        padding: 15px;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 30px;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     }
 
     .doctor-info h3 {
-        margin-bottom: 10px;
-        font-size: 18px;
-        font-weight: bold;
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 15px;
     }
 
     .doctor-info ul {
         list-style: none;
-        padding: 0;
+        padding-left: 0;
     }
 
     .doctor-info li {
-        margin-bottom: 8px;
         font-size: 16px;
+        margin-bottom: 10px;
         color: #444;
     }
 
     .doctor-info li strong {
         color: #222;
+        display: inline-block;
+        width: 150px;
+    }
+
+    @media screen and (max-width: 768px) {
+        .welcome-card, .stats-container {
+            flex-direction: column;
+        }
+
+        .welcome-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .stat-card {
+            width: 100%;
+        }
+
+        .doctor-info li strong {
+            width: 120px;
+        }
     }
 </style>
 
@@ -115,13 +157,10 @@
 
     <div class="welcome-card">
         <div class="welcome-content">
-            <!-- <img src="" alt="Doctor Profile" class="doctor-profile"> -->
+            <img class="doctor-profile" src="<%=doctor.profile.url%>" alt="Doctor Profile">
             <div class="welcome-text">
                 <h3>Welcome back</h3>
-              <!--  <i class="fa-solid fa-user fs-4"></i>-->
-                <img style="height: 50px; width: 50px; border-radius: 50%;object-fit: cover;" src="<%=doctor.profile.url%>" alt="">
-                <span class="doctor-name">&nbsp;Dr. <%= doctor.username %></span>
-                
+                <span class="doctor-name">Dr. <%= doctor.username %></span>
                 <p>
                     Dedicated to providing the best healthcare services with <%= doctor.experience %> years of experience.
                 </p>
@@ -144,13 +183,12 @@
         <h3>Details:</h3>
         <ul>
             <li><strong>Specialization:</strong> <%= doctor.specialization %></li>
-             <li><strong>Degree:</strong> <%= doctor.Degree %></li>
-            <li><strong>Experience:</strong> <%= doctor.experience %> years old</li>
+            <li><strong>Degree:</strong> <%= doctor.Degree %></li>
+            <li><strong>Experience:</strong> <%= doctor.experience %> years</li>
             <li><strong>Hospital:</strong> <%= doctor.hospital %></li>
             <li><strong>Location:</strong> <%= doctor.location %></li>
             <li><strong>Country:</strong> <%= doctor.country %></li>
-            <li><strong>ConsultantFees:</strong> <%= doctor.consultantFees %></li>
-            
+            <li><strong>Consultant Fees:</strong> ₹<%= doctor.consultantFees %></li>
             <li><strong>Phone:</strong> <%= doctor.phone %></li>
         </ul>
     </div>

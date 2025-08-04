@@ -3,6 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatBox = document.getElementById("chat-box");
     const inputField = document.getElementById("message");
 
+    if (!form || !chatBox || !inputField) {
+        return; // Exit if chat elements don't exist
+    }
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const message = inputField.value.trim();
@@ -14,8 +18,12 @@ document.addEventListener("DOMContentLoaded", () => {
         inputField.value = "";
 
         try {
+            // Determine the correct chat endpoint based on current URL
+            const currentPath = window.location.pathname;
+            const chatEndpoint = currentPath.includes('/doctor/') ? '/doctor/chat' : '/patient/chat';
+            
             // Send request to server
-            const response = await fetch("/chat", {
+            const response = await fetch(chatEndpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message }),
@@ -23,14 +31,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const data = await response.json();
             
-            // Correct extraction based on Together API response format
-            const botResponse = data.choices?.[0]?.message?.content || "Sorry, I couldn't understand that.";
+            if (data.error) {
+                appendMessage("bot", "Sorry, there was an error processing your message. Please try again.");
+                return;
+            }
 
             // Display bot response
-            appendMessage("bot", botResponse);
+            appendMessage("bot", data.response);
         } catch (error) {
             console.error("Error:", error);
-            appendMessage("bot", "Oops! Something went wrong. Try again.");
+            appendMessage("bot", "I'm having trouble connecting right now. Please try again in a moment.");
         }
     });
 

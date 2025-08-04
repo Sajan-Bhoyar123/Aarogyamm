@@ -353,3 +353,19 @@ module.exports.bookAppointment = async (req, res, next) => {
     res.redirect("/patient/bookappointment");
   }
 };
+
+/**
+ * Render calendar for the patient.
+ */
+module.exports.calendar = async (req, res, next) => {
+  try {
+    const patientId = req.user._id;
+    const patient = await Patient.findById(patientId);
+    const appointments = await Appointment.find({ patientId }).populate("doctorId");
+    res.render("patient/calendar", { appointments, patient });
+  } catch (err) {
+    console.error("Error fetching calendar:", err);
+    req.flash("error", "Internal Server Error.");
+    res.redirect("/patient/dashboard");
+  }
+};

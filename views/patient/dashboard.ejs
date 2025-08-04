@@ -1,115 +1,187 @@
 <%- layout("./layouts/patientboilerplate") %>
 
 <style>
-  .dashboard-container {
-    padding: 0 20px 20px 20px;
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #f3f9ff, #ffffff);
     color: #333;
-}
+  }
 
-.dashboard-header span {
-    font-size: 14px;
-    color: #888;
-}
+  .dashboard-container {
+    padding: 30px 20px;
+    max-width: 1000px;
+    margin: auto;
+  }
 
-.welcome-card {
-    background: #f8f9fd;
-    padding: 20px;
-    border-radius: 12px;
+  .dashboard-header h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2b4f81;
+    margin-bottom: 25px;
+    text-align: center;
+  }
+
+  .welcome-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 25px;
     display: flex;
     align-items: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    margin-top: 15px;
-}
+    gap: 25px;
+    transition: all 0.3s ease-in-out;
+    flex-wrap: wrap;
+  }
 
-.welcome-content {
+  .welcome-card:hover {
+    transform: scale(1.02);
+  }
+
+  .welcome-content {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 20px;
-}
+    flex: 1;
+  }
 
-.welcome-image {
-    width: 120px;
-    height: auto;
-}
+  .welcome-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #007bff;
+  }
 
-.welcome-text h3 {
-    font-weight: normal;
-    color: #666;
-}
+  .welcome-text {
+    flex: 1;
+  }
 
-.patient-name {
+  .welcome-text h3 {
+    font-size: 20px;
+    color: #444;
+    margin-bottom: 8px;
+  }
+
+  .patient-name {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
     color: #007bff;
-    font-size: 22px;
-    font-weight: bold;
-}
+    margin-bottom: 8px;
+  }
 
-.welcome-text p {
-    font-size: 14px;
+  .welcome-text p {
+    font-size: 15px;
     color: #555;
-    max-width: 600px;
-    line-height: 1.5;
-}
+    line-height: 1.6;
+    max-width: 700px;
+  }
 
-.patient-info {
-    margin-top: 20px;
+  .patient-info {
+    margin-top: 30px;
     background: white;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+  }
 
-.patient-info h3 {
-    margin-bottom: 10px;
-    font-size: 18px;
-    font-weight: bold;
-}
+  .patient-info:hover {
+    transform: translateY(-3px);
+  }
 
-.patient-info ul {
+  .patient-info h3 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 18px;
+    border-bottom: 2px solid #e6ecf2;
+    padding-bottom: 6px;
+  }
+
+  .patient-info ul {
     list-style: none;
     padding: 0;
-}
+    margin: 0;
+  }
 
-.patient-info li {
-    margin-bottom: 8px;
+  .patient-info li {
+    display: flex;
+    align-items: center;
     font-size: 16px;
     color: #444;
-}
+    margin-bottom: 12px;
+  }
 
-.patient-info li strong {
-    color: #222;
-}
+  .patient-info li strong {
+    width: 140px;
+    color: #2b4f81;
+    font-weight: 600;
+  }
+
+  @media (max-width: 768px) {
+    .welcome-card {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .welcome-content {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .patient-info li {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .patient-info li strong {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    .dashboard-header h2 {
+      font-size: 26px;
+    }
+
+    .welcome-text h3,
+    .patient-name {
+      font-size: 20px;
+    }
+  }
 </style>
 
 <div class="dashboard-container container">
   <div class="dashboard-header">
-      <h2>Dashboard</h2>
+    <h2>Welcome to Your Dashboard</h2>
   </div>
 
   <div class="welcome-card">
-      <div class="welcome-content">
-          <!-- <img src="/images/medical-team.png" alt="Doctors" class="welcome-image"> -->
-          <div class="welcome-text">
-              <h3>Welcome back</h3>
-              <img style="height: 50px; width: 50px; border-radius: 50%;object-fit: cover;" src="<%=patient.profile.url%>" alt="">
-              <span class="patient-name">&nbsp;</i><%= patient.username %></span>
-              <p>
-                  We would like to take this opportunity to welcome you to our practice and 
-                  thank you for choosing our physicians to participate in your healthcare. 
-                  We look forward to providing you with personalized, comprehensive healthcare 
-                  focusing on wellness and prevention.
-              </p>
-          </div>
+    <div class="welcome-content">
+      <img class="welcome-image" src="<%=patient.profile.url%>" alt="Patient Image" />
+      <div class="welcome-text">
+        <h3>Welcome back</h3>
+        <span class="patient-name"><%= patient.username %></span>
+        <p>
+          We would like to take this opportunity to welcome you to our practice and 
+          thank you for choosing our physicians to participate in your healthcare. 
+          We look forward to providing you with personalized, comprehensive healthcare 
+          focusing on wellness and prevention.
+        </p>
       </div>
+    </div>
   </div>
 
   <div class="patient-info">
-      <h3>Details:</h3>
-      <ul>
-          <li><strong>Gender:</strong> <%= patient.gender %></li>
-          <li><strong>Age:</strong> <%= patient.age %> years old</li>
-          <li><strong>Height:</strong> <%= patient.height %> cm</li>
-          <li><strong>Weight:</strong> <%= patient.weight %> kg</li>
-          <li><strong>Blood Type:</strong> <%= patient.bloodType %></li>
-      </ul>
+    <h3>Patient Details</h3>
+    <ul>
+      <li><strong>Gender:</strong> <%= patient.gender %></li>
+      <li><strong>Age:</strong> <%= patient.age %> years old</li>
+      <li><strong>Height:</strong> <%= patient.height %> cm</li>
+      <li><strong>Weight:</strong> <%= patient.weight %> kg</li>
+      <li><strong>Blood Type:</strong> <%= patient.bloodType %></li>
+    </ul>
   </div>
 </div>

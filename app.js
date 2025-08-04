@@ -59,13 +59,25 @@ async function main() {
   try {
     await mongoose.connect(dbUrl, {
       serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000
+      socketTimeoutMS: 45000,
+      tls: true,
+      tlsAllowInvalidCertificates: true,
+      retryWrites: true,
+      w: 'majority',
+      useNewUrlParser: true,
+      useUnifiedTopology: true
     });
     console.log("Connected successfully to MongoDB Atlas");
   } catch (err) {
     console.error("MongoDB connection error:", err);
+    // Try local MongoDB as fallback
+    try {
+      await mongoose.connect(MongoUrl);
+      console.log("Connected to local MongoDB as fallback");
+    } catch (localErr) {
+      console.error("Local MongoDB connection also failed:", localErr);
+    }
   }
-  //await mongoose.connect(MongoUrl);
 }
 main()
   .then(() => console.log("Connected to DB"))
@@ -82,6 +94,14 @@ const store = MongoStore.create({
       secret: process.env.SECRET,
   },
   touchAfter: 24 * 3600,
+  mongoOptions: {
+    tls: true,
+    tlsAllowInvalidCertificates: true,
+    retryWrites: true,
+    w: 'majority',
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }
 });
 
 store.on("error", () => {
