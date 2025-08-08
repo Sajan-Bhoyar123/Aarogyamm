@@ -6,6 +6,8 @@ const Patient = require("../models/patient");
 const Appointment = require("../models/appointment");
 const HealthRecord = require("../models/healthrecord");
 const Billing = require("../models/billing");
+const { isSlotAvailable } = require("../utils/availabilityUtils");
+const { generateAppointmentSlots } = require("../utils/availabilityUtils");
 
 const { appointmentSchema } = require('../schema');
 const ExpressError = require("../utils/ExpressError");
@@ -320,16 +322,52 @@ module.exports.bookAppointment = async (req, res, next) => {
     if (error) {
       const messages = error.details.map(err => err.message);
       req.flash("error", messages.join(", "));
-      return res.redirect("/patient/bookappointment");
+      const doctorIdFromReq = req.body?.patient?.doctorId;
+      return res.redirect(doctorIdFromReq ? `/patient/bookappointment/${doctorIdFromReq}` : "/patient/dashboard");
     }
 
     const patientId = req.user._id;
     const { doctorId, appointmentDate, timeSlot, reason } = value.patient;
 
+    // Get doctor details to check availability
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      req.flash("error", "Doctor not found.");
+      return res.redirect(`/patient/bookappointment/${doctorId}`);
+    }
+
+    // Check if the requested time slot is available
+    const appointmentDateObj = new Date(appointmentDate);
+    // Prevent booking in the past (compare by date only)
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    if (appointmentDateObj < startOfToday) {
+      req.flash("error", "Appointment date must be today or a future date.");
+      return res.redirect(`/patient/bookappointment/${doctorId}`);
+    }
+    if (!isSlotAvailable(doctor, appointmentDateObj, timeSlot)) {
+      req.flash("error", "The selected time slot is not available. Please choose a different time.");
+      return res.redirect(`/patient/bookappointment/${doctorId}`);
+    }
+
+    // Check if there are any existing appointments at the same time
+    const existingAppointment = await Appointment.findOne({
+      doctorId,
+      date: appointmentDateObj,
+      timeSlot,
+      status: { $in: ["pending", "confirmed"] }
+    });
+
+    if (existingAppointment) {
+      req.flash("error", "This time slot is already booked. Please choose a different time.");
+      return res.redirect(`/patient/bookappointment/${doctorId}`);
+       //return res.redirect(`/city/doctor/${doctorId}`);
+    }
+
     const newAppointment = new Appointment({
       patientId,
       doctorId,
-      date: new Date(appointmentDate),
+      date: appointmentDateObj,
       timeSlot,
       status: "pending",
       reason,
@@ -350,7 +388,61 @@ module.exports.bookAppointment = async (req, res, next) => {
   } catch (error) {
     console.error("Error booking appointment:", error);
     req.flash("error", "Failed to book appointment. Please try again.");
-    res.redirect("/patient/bookappointment");
+    const fallbackDoctorId = req.body?.patient?.doctorId;
+    res.redirect(fallbackDoctorId ? `/patient/bookappointment/${fallbackDoctorId}` : "/patient/dashboard");
+  }
+};
+
+/**
+ * Get available slots for a specific doctor and date
+ */
+module.exports.getAvailableSlots = async (req, res, next) => {
+  try {
+    const { doctorId, date } = req.params;
+    const patientId = req.user._id;
+
+    // Validate that the patient is trying to book for themselves
+    if (patientId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: "Unauthorized access" });
+    }
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ error: "Doctor not found" });
+    }
+
+    const appointmentDate = new Date(date);
+    if (isNaN(appointmentDate.getTime())) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    // Get existing appointments for the date to filter out booked slots
+    const existingAppointments = await Appointment.find({
+      doctorId,
+      date: appointmentDate,
+      status: { $in: ["pending", "confirmed"] }
+    });
+
+    // Generate all available slots
+    const allSlots = generateAppointmentSlots(doctor, appointmentDate);
+
+    // Filter out already booked slots
+    const availableSlots = allSlots.filter(slot => {
+      const slotTime = `${slot.startTime}-${slot.endTime}`;
+      return !existingAppointments.some(appointment => appointment.timeSlot === slotTime);
+    });
+
+    res.json({
+      success: true,
+      date: date,
+      availableSlots: availableSlots,
+      totalSlots: allSlots.length,
+      bookedSlots: existingAppointments.length
+    });
+
+  } catch (error) {
+    console.error("Error fetching available slots:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 

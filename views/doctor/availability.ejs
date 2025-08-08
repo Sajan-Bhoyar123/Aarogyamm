@@ -1,0 +1,363 @@
+<%- layout('./layouts/doctorboilerplate') %>
+
+<style>
+    .availability-container {
+        padding: 20px;
+        color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .availability-header h2 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #007bff;
+    }
+
+    .availability-card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+    }
+
+    .day-section {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+    }
+
+    .day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #007bff;
+    }
+
+    .day-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #007bff;
+        margin: 0;
+    }
+
+    .toggle-availability {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-switch {
+        padding-left: 2.5em;
+    }
+
+    .form-check-input {
+        width: 3em;
+        height: 1.5em;
+        margin-top: 0.25em;
+        margin-left: -2.5em;
+    }
+
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .time-slot {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        position: relative;
+    }
+
+    .time-slot-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .time-range {
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .slot-duration {
+        font-size: 12px;
+        color: #6c757d;
+        background: #e9ecef;
+        padding: 2px 8px;
+        border-radius: 12px;
+    }
+
+    .add-slot-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+
+    .add-slot-btn:hover {
+        background: #218838;
+    }
+
+    .remove-slot-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background-color 0.3s;
+    }
+
+    .remove-slot-btn:hover {
+        background: #c82333;
+    }
+
+    .time-inputs {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .time-input {
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .duration-input {
+        width: 80px;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .save-btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 20px;
+    }
+
+    .save-btn:hover {
+        background: #0056b3;
+    }
+
+    .save-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .no-slots {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+        padding: 20px;
+    }
+
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #c3e6cb;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+
+<div class="availability-container container">
+    <div class="availability-header">
+        <h2>Manage Availability</h2>
+        <p>Set your available time slots for each day of the week. Patients will only be able to book appointments during these times.</p>
+    </div>
+
+    <% if (messages.success) { %>
+        <div class="success-message">
+            <%= messages.success %>
+        </div>
+    <% } %>
+
+    <% if (messages.error) { %>
+        <div class="error-message">
+            <%= messages.error %>
+        </div>
+    <% } %>
+
+    <form id="availabilityForm" method="POST" action="/doctor/availability">
+        <div class="availability-card">
+            <% const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']; %>
+            <% days.forEach(day => { %>
+                <% const daySlots = doctor.availabilitySlots.filter(slot => slot.day === day); %>
+                <div class="day-section">
+                    <div class="day-header">
+                        <h3 class="day-title"><%= day %></h3>
+                        <div class="toggle-availability">
+                            <label class="form-check-label" for="available-<%= day.toLowerCase() %>">
+                                Available
+                            </label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="available-<%= day.toLowerCase() %>" 
+                                       name="<%= day.toLowerCase() %>Available"
+                                       <%= daySlots.length > 0 ? 'checked' : '' %>>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="time-slots" id="slots-<%= day.toLowerCase() %>">
+                        <% if (daySlots.length > 0) { %>
+                            <% daySlots.forEach((slot, index) => { %>
+                                <div class="time-slot" data-day="<%= day %>" data-index="<%= index %>">
+                                    <div class="time-slot-header">
+                                        <span class="time-range"><%= slot.startTime %> - <%= slot.endTime %></span>
+                                        <span class="slot-duration"><%= slot.slotDuration %> min</span>
+                                        <button type="button" class="remove-slot-btn" onclick="removeSlot('<%= day %>', <%= index %>)">×</button>
+                                    </div>
+                                    <input type="hidden" name="<%= day.toLowerCase() %>Slots[<%= index %>][day]" value="<%= day %>">
+                                    <input type="hidden" name="<%= day.toLowerCase() %>Slots[<%= index %>][startTime]" value="<%= slot.startTime %>">
+                                    <input type="hidden" name="<%= day.toLowerCase() %>Slots[<%= index %>][endTime]" value="<%= slot.endTime %>">
+                                    <input type="hidden" name="<%= day.toLowerCase() %>Slots[<%= index %>][slotDuration]" value="<%= slot.slotDuration %>">
+                                    <input type="hidden" name="<%= day.toLowerCase() %>Slots[<%= index %>][isAvailable]" value="<%= slot.isAvailable %>">
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="no-slots">No time slots set for this day</div>
+                        <% } %>
+                    </div>
+
+                    <button type="button" class="add-slot-btn" onclick="addSlot('<%= day %>')">
+                        + Add Time Slot
+                    </button>
+                </div>
+            <% }); %>
+
+            <button type="submit" class="save-btn">Save Availability</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function addSlot(day) {
+        const slotsContainer = document.getElementById(`slots-${day.toLowerCase()}`);
+        const noSlotsDiv = slotsContainer.querySelector('.no-slots');
+        if (noSlotsDiv) {
+            noSlotsDiv.remove();
+        }
+
+        const slotIndex = slotsContainer.querySelectorAll('.time-slot').length;
+        
+        const slotHtml = `
+            <div class="time-slot" data-day="${day}" data-index="${slotIndex}">
+                <div class="time-slot-header">
+                    <span class="time-range">New Slot</span>
+                    <span class="slot-duration">30 min</span>
+                    <button type="button" class="remove-slot-btn" onclick="removeSlot('${day}', ${slotIndex})">×</button>
+                </div>
+                <div class="time-inputs">
+                    <input type="time" class="time-input" name="${day.toLowerCase()}Slots[${slotIndex}][startTime]" required>
+                    <span>-</span>
+                    <input type="time" class="time-input" name="${day.toLowerCase()}Slots[${slotIndex}][endTime]" required>
+                    <input type="number" class="duration-input" name="${day.toLowerCase()}Slots[${slotIndex}][slotDuration]" value="30" min="15" max="120" step="15" placeholder="Duration">
+                    <span>min</span>
+                </div>
+                <input type="hidden" name="${day.toLowerCase()}Slots[${slotIndex}][day]" value="${day}">
+                <input type="hidden" name="${day.toLowerCase()}Slots[${slotIndex}][isAvailable]" value="true">
+            </div>
+        `;
+        
+        slotsContainer.insertAdjacentHTML('beforeend', slotHtml);
+    }
+
+    function removeSlot(day, index) {
+        const slotsContainer = document.getElementById(`slots-${day.toLowerCase()}`);
+        const slotToRemove = slotsContainer.querySelector(`[data-day="${day}"][data-index="${index}"]`);
+        
+        if (slotToRemove) {
+            slotToRemove.remove();
+        }
+
+        // Reindex remaining slots
+        const remainingSlots = slotsContainer.querySelectorAll(`[data-day="${day}"]`);
+        remainingSlots.forEach((slot, newIndex) => {
+            slot.setAttribute('data-index', newIndex);
+            const inputs = slot.querySelectorAll('input');
+            inputs.forEach(input => {
+                const name = input.getAttribute('name');
+                if (name) {
+                    input.setAttribute('name', name.replace(/\[\d+\]/, `[${newIndex}]`));
+                }
+            });
+        });
+
+        // If no slots left, show "no slots" message
+        if (remainingSlots.length === 0) {
+            slotsContainer.innerHTML = '<div class="no-slots">No time slots set for this day</div>';
+        }
+    }
+
+    // Handle availability toggle
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const day = this.id.replace('available-', '');
+            const slotsContainer = document.getElementById(`slots-${day}`);
+            const addButton = slotsContainer.nextElementSibling;
+            
+            if (this.checked) {
+                slotsContainer.style.display = 'block';
+                addButton.style.display = 'inline-block';
+            } else {
+                slotsContainer.style.display = 'none';
+                addButton.style.display = 'none';
+            }
+        });
+    });
+
+    // Initialize display based on checkboxes
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            const day = checkbox.id.replace('available-', '');
+            const slotsContainer = document.getElementById(`slots-${day}`);
+            const addButton = slotsContainer.nextElementSibling;
+            
+            if (!checkbox.checked) {
+                slotsContainer.style.display = 'none';
+                addButton.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+

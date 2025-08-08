@@ -99,20 +99,18 @@
         
             <div class="mb-2">
                 <label class="form-label">Appointment Date</label>
-                <input type="date" name="patient[appointmentDate]" class="form-control" required min="<%= new Date().toISOString().split('T')[0] %>">
+                <input type="date" name="patient[appointmentDate]" id="appointmentDate" class="form-control" required min="<%= new Date().toISOString().split('T')[0] %>">
                 <div class="invalid-feedback">Please select a date.</div>
+                <small class="form-text text-muted">Available time slots will update based on your selected date.</small>
             </div>
         
             <div class="mb-2">
                 <label class="form-label">Time Slot</label>
-                <select name="patient[timeSlot]" class="form-select" required>
-                    <option value="" selected disabled>Select a time</option>
-                    <option value="09:00-09:30">09:00 - 09:30 AM</option>
-                    <option value="09:30-10:00">09:30 - 10:00 AM</option>
-                    <option value="10:00-10:30">10:00 - 10:30 AM</option>
-                    <option value="10:30-11:00">10:30 - 11:00 AM</option>
+                <select name="patient[timeSlot]" id="timeSlotSelect" class="form-select" required>
+                    <option value="" selected disabled>Select a date first to see available slots</option>
                 </select>
                 <div class="invalid-feedback">Please choose a time slot.</div>
+                <small class="form-text text-muted">Only time slots available on the selected date will be shown.</small>
             </div>
         
             <div class="mb-2">
@@ -137,5 +135,62 @@
             }
             form.classList.add("was-validated");
         });
+    });
+</script>
+
+<!-- Dynamic Time Slot Update Script -->
+<script>
+    // Doctor availability data from the server
+    const doctorAvailability = <%- JSON.stringify(doctor.availabilitySlots || []) %>;
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        const dateInput = document.getElementById("appointmentDate");
+        const timeSlotSelect = document.getElementById("timeSlotSelect");
+        
+        // Set initial date to today
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+        
+        // Update time slots when date changes
+        dateInput.addEventListener("change", updateTimeSlots);
+        
+        // Initial update
+        updateTimeSlots();
+        
+        function updateTimeSlots() {
+            const selectedDate = new Date(dateInput.value);
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayOfWeek = days[selectedDate.getDay()];
+            
+            // Clear existing options
+            timeSlotSelect.innerHTML = '<option value="" selected disabled>Select a time slot</option>';
+            
+            if (!doctorAvailability || doctorAvailability.length === 0) {
+                timeSlotSelect.innerHTML = '<option value="" disabled>Doctor has not set availability yet</option>';
+                return;
+            }
+            
+            // Filter slots for the selected day
+            var daySlots = [];
+            for (var i = 0; i < doctorAvailability.length; i++) {
+                if (doctorAvailability[i].day === dayOfWeek) {
+                    daySlots.push(doctorAvailability[i]);
+                }
+            }
+            
+            if (daySlots.length === 0) {
+                timeSlotSelect.innerHTML = '<option value="" disabled>No available slots for ' + dayOfWeek + '</option>';
+                return;
+            }
+            
+            // Add available slots
+            for (var j = 0; j < daySlots.length; j++) {
+                var slot = daySlots[j];
+                var option = document.createElement('option');
+                option.value = slot.startTime + '-' + slot.endTime;
+                option.textContent = slot.startTime + ' - ' + slot.endTime + ' (' + slot.slotDuration + ' min)';
+                timeSlotSelect.appendChild(option);
+            }
+        }
     });
 </script>

@@ -5,6 +5,7 @@
         padding: 20px;
         color: #333;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        
     }
 
     .dashboard-header h2 {
@@ -22,6 +23,8 @@
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         transition: transform 0.2s ease;
+        z-index: 1; /* keep below sidebar */
+        position: relative;
     }
 
     .welcome-card:hover {
@@ -80,6 +83,8 @@
         min-width: 150px;
         text-align: center;
         transition: all 0.3s ease;
+        position: relative;
+        z-index: 1; /* keep below sidebar */
     }
 
     .stat-card:hover {
@@ -142,6 +147,7 @@
 
         .stat-card {
             width: 100%;
+            
         }
 
         .doctor-info li strong {
@@ -176,6 +182,26 @@
         <div class="stat-card">
             <div class="stat-number"><%= doctor.patients.length %>+</div>
             <div class="stat-label">Patients</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number"><%= doctor.availabilitySlots ? doctor.availabilitySlots.length : 0 %></div>
+            <div class="stat-label">Available Slots</div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div  class="stat-card">
+                <h5>Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="/doctor/availability" class="btn btn-outline-primary">
+                        <i class="bi bi-clock me-2"></i>Manage Availability
+                    </a>
+                    <a href="/doctor/appointments" class="btn btn-outline-success">
+                        <i class="bi bi-calendar-check me-2"></i>View Appointments
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 

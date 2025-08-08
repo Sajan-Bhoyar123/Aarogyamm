@@ -10,15 +10,15 @@ module.exports.appointmentSchema = Joi.object({
       }),
       email: Joi.string().email().required(),
       doctorId: Joi.string().required(), // could validate as an ObjectId if needed
-      appointmentDate: Joi.date().greater('now').required().messages({
-        'date.greater': 'Appointment date must be in the future.'
+      // Allow booking for today or future dates
+      appointmentDate: Joi.date().min('now').required().messages({
+        'date.min': 'Appointment date must be today or in the future.'
       }),
-      timeSlot: Joi.string().valid(
-        '09:00-09:30',
-        '09:30-10:00',
-        '10:00-10:30',
-        '10:30-11:00'
-      ).required(),
+      // Accept any HH:MM-HH:MM format to support dynamic slots from doctor's availability
+      timeSlot: Joi.string()
+        .pattern(/^\d{2}:\d{2}-\d{2}:\d{2}$/)
+        .required()
+        .messages({ 'string.pattern.base': 'Time slot must be in HH:MM-HH:MM format.' }),
       reason: Joi.string().allow('').max(500) // optional
     }).required()
   });

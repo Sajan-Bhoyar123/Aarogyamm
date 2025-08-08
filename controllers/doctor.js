@@ -25,6 +25,69 @@ module.exports.dashboard = async (req, res, next) => {
   }
 };
 
+// Render Availability Management Page
+module.exports.availability = async (req, res, next) => {
+  try {
+    const doctor = await Doctor.findById(req.user._id);
+    if (!doctor) {
+      req.flash("error", "Doctor not found.");
+      return res.redirect("/auth/login");
+    }
+    res.render("doctor/availability", { doctor, messages: req.flash() });
+  } catch (err) {
+    console.error("Error fetching doctor data:", err);
+    req.flash("error", "Internal Server Error.");
+    res.redirect("/doctor/dashboard");
+  }
+};
+
+// Update Doctor Availability
+module.exports.updateAvailability = async (req, res, next) => {
+  try {
+    const doctorId = req.user._id;
+    const doctor = await Doctor.findById(doctorId);
+    
+    if (!doctor) {
+      req.flash("error", "Doctor not found.");
+      return res.redirect("/auth/login");
+    }
+
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    let allSlots = [];
+
+    days.forEach(day => {
+      const isAvailable = req.body[`${day}Available`] === 'on';
+      if (isAvailable) {
+        const daySlots = req.body[`${day}Slots`] || [];
+        if (Array.isArray(daySlots)) {
+          daySlots.forEach(slot => {
+            if (slot.startTime && slot.endTime && slot.slotDuration) {
+              allSlots.push({
+                day: slot.day,
+                startTime: slot.startTime,
+                endTime: slot.endTime,
+                slotDuration: parseInt(slot.slotDuration),
+                isAvailable: true
+              });
+            }
+          });
+        }
+      }
+    });
+
+    // Update doctor's availability slots
+    doctor.availabilitySlots = allSlots;
+    await doctor.save();
+
+    req.flash("success", "Availability updated successfully!");
+    res.redirect("/doctor/availability");
+  } catch (err) {
+    console.error("Error updating availability:", err);
+    req.flash("error", "Failed to update availability. Please try again.");
+    res.redirect("/doctor/availability");
+  }
+};
+
 // List all Appointments
 module.exports.appointments = async (req, res, next) => {
   try {

@@ -16,29 +16,36 @@ router.get("/", async (req, res) => {
         res.redirect("/");
     }
 });
-
-
 router.get("/doctor", async (req, res) => {
-    try {
-        let { location } = req.query;
-        const patientId = req.user._id;
-        const patient = await Patient.findById(patientId);
-        let doctors = await Doctor.find({ location: location });
+  try {
+    const { location } = req.query;
+    const patientId = req.user._id;
+    const patient = await Patient.findById(patientId);
 
-        if (doctors.length < 1) {
-          
-            req.flash("error", `Sorry, no doctors were found in ${location}.`);
-            res.redirect("/city");
-        } else {
-         
-            const successMsg = `Successfully found ${doctors.length} doctor(s) in ${location}.`;
-            res.render("searchpages/doctorpage", { doctors, patient, success: successMsg, error: null });
-        }
-    } catch (e) {
-        req.flash("error", "An unexpected error occurred during the search.");
-        res.redirect("/city");
+    const doctors = await Doctor.find({
+      location: { $regex: new RegExp(location, 'i') } 
+    });
+
+    if (doctors.length < 1) {
+      req.flash("error", `Sorry, no doctors were found in ${location}.`);
+      return res.redirect("/city");
     }
+
+    const successMsg = `Successfully found ${doctors.length} doctor(s) in ${location}.`;
+    res.render("searchpages/doctorpage", {
+      doctors,
+      patient,
+      success: successMsg,
+      error: null
+    });
+
+  } catch (e) {
+    console.error(e);
+    req.flash("error", "An unexpected error occurred during the search.");
+    res.redirect("/city");
+  }
 });
+
 
 
 router.post("/:CityName/specialization", async (req, res) => {

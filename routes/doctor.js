@@ -11,11 +11,15 @@ const upload = multer({ storage });
 
 // GET routes
 router.get("/dashboard", doctorController.dashboard);
+router.get("/availability", doctorController.availability);
 router.get("/appointments", doctorController.appointments);
 router.get("/patients", doctorController.patients);
 router.get("/patient/:id/healthrecords", doctorController.healthRecords);
 router.get("/:doctorId/patient/:patientId/prescriptions", doctorController.prescriptions);
 router.get("/calendar", doctorController.calendar);
+
+// POST routes for availability management
+router.post("/availability", doctorController.updateAvailability);
 
 // Combined routes using `router.route()`
 router

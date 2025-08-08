@@ -56,6 +56,9 @@ router
   .route("/bookappointment")
   .post(isAuthenticated, patientController.bookAppointment);
 
+// GET route for available slots
+router.get("/available-slots/:doctorId/:date", isAuthenticated, patientController.getAvailableSlots);
+
 router.get("/chat",async (req, res) => {
    const patientId = req.user._id;
   const patient = await Patient.findById(patientId);
