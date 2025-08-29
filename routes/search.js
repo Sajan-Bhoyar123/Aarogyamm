@@ -56,7 +56,7 @@ router.post("/:CityName/specialization", async (req, res) => {
         let { CityName } = req.params;
         let { specialization: expert } = req.body;
         
-        let doctors = await Doctor.find({ $and: [{ location: CityName }, { specialization: expert }] });
+        let doctors = await Doctor.find({ $and: [{ location:{$regex:new RegExp(CityName,'i')} }, { specialization: expert }] });
      
         console.log("Location = ",CityName)
         console.log("Specialization = ",expert);
@@ -67,9 +67,9 @@ router.post("/:CityName/specialization", async (req, res) => {
             req.flash("error", `No doctors with specialization '${expert}' found in ${CityName}.`);
             res.redirect(`/city/doctor?location=${CityName}`);
         } else {
-            
+            let location = CityName;
             const successMsg = `Successfully found ${doctors.length} ${expert} doctor(s) in ${CityName}.`;
-            res.render("searchpages/doctorpage", { doctors, patient, success: successMsg, error: null });
+            res.render("searchpages/doctorpage", { doctors,location,patient, success: successMsg, error: null });
         }
     } catch (e) {
       console.log("hemant");
