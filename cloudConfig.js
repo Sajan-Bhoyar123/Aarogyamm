@@ -14,7 +14,6 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'Health',
     allowedFormats: ["png","jpg","jpeg","pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt"],
-    resource_type: 'raw', // Force all files to be raw - this fixes the PDF issue
   },
 });
 
