@@ -21,7 +21,7 @@ router.get("/doctor", async (req, res) => {
     const { location } = req.query;
     const patientId = req.user._id;
     const patient = await Patient.findById(patientId);
-
+    console.log("first location = ",location);
     const doctors = await Doctor.find({
       location: { $regex: new RegExp(location, 'i') } 
     });
@@ -35,6 +35,7 @@ router.get("/doctor", async (req, res) => {
     res.render("searchpages/doctorpage", {
       doctors,
       patient,
+      location,
       success: successMsg,
       error: null
     });
@@ -56,9 +57,13 @@ router.post("/:CityName/specialization", async (req, res) => {
         let { specialization: expert } = req.body;
         
         let doctors = await Doctor.find({ $and: [{ location: CityName }, { specialization: expert }] });
+     
+        console.log("Location = ",CityName)
+        console.log("Specialization = ",expert);
+        console.log(doctors);
 
         if (doctors.length < 1) {
-          
+             console.log("sajan");
             req.flash("error", `No doctors with specialization '${expert}' found in ${CityName}.`);
             res.redirect(`/city/doctor?location=${CityName}`);
         } else {
@@ -67,6 +72,7 @@ router.post("/:CityName/specialization", async (req, res) => {
             res.render("searchpages/doctorpage", { doctors, patient, success: successMsg, error: null });
         }
     } catch (e) {
+      console.log("hemant");
         req.flash("error", "An unexpected error occurred during the specialized search.");
         res.redirect("/city");
     }
