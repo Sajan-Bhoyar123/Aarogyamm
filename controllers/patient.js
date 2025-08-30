@@ -12,9 +12,7 @@ const { generateAppointmentSlots } = require("../utils/availabilityUtils");
 const { appointmentSchema } = require('../schema');
 const ExpressError = require("../utils/ExpressError");
 
-/**
- * Render the patient's dashboard.
- */
+
 module.exports.dashboard = async (req, res, next) => {
   try {
     const patient = await Patient.findById(req.user._id);
@@ -30,14 +28,12 @@ module.exports.dashboard = async (req, res, next) => {
   }
 };
 
-/**
- * Render upcoming appointments.
- */
+
 module.exports.upcomingAppointments = async (req, res, next) => {
   try {
     const patientId = req.user._id;
     const tomorrow = new Date();
-    tomorrow.setHours(0, 0, 0, 0); // Start of next day
+    tomorrow.setHours(0, 0, 0, 0); 
 
     const appointments = await Appointment.find({
       patientId,
@@ -54,9 +50,7 @@ module.exports.upcomingAppointments = async (req, res, next) => {
   }
 };
 
-/**
- * Render today's appointments.
- */
+
 module.exports.todaysAppointments = async (req, res, next) => {
   try {
     const patientId = req.user._id;
@@ -80,14 +74,12 @@ module.exports.todaysAppointments = async (req, res, next) => {
   }
 };
 
-/**
- * Render past appointments.
- */
+
 module.exports.pastAppointments = async (req, res, next) => {
   try {
     const patientId = req.user._id;
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Start of today
+    today.setHours(0, 0, 0, 0); 
 
     const appointments = await Appointment.find({
       patientId,
@@ -104,16 +96,13 @@ module.exports.pastAppointments = async (req, res, next) => {
   }
 };
 
-/**
- * Cancel an appointment.
- * This function is used for upcoming, today's, and past appointments.
- */
+
 module.exports.cancelAppointment = async (req, res, next) => {
   try {
     const { id } = req.params;
     await Appointment.findByIdAndDelete(id);
     req.flash("success", "Appointment canceled successfully!");
-    // Determine the referer to redirect appropriately.
+    
     const referer = req.get("referer") || "/patient/dashboard";
     res.redirect(referer);
   } catch (error) {
@@ -124,9 +113,7 @@ module.exports.cancelAppointment = async (req, res, next) => {
   }
 };
 
-/**
- * Filter appointments based on query parameters.
- */
+
 module.exports.filterAppointments = async (req, res, next) => {
   try {
     let patientId = req.user._id;
@@ -163,9 +150,7 @@ module.exports.filterAppointments = async (req, res, next) => {
   }
 };
 
-/**
- * Render appointment booking page.
- */
+
 module.exports.bookAppointmentPage = async (req, res, next) => {
   try {
     const patientId = req.user._id;
@@ -180,9 +165,7 @@ module.exports.bookAppointmentPage = async (req, res, next) => {
   }
 };
 
-/**
- * Render health records for the patient.
- */
+
 module.exports.healthRecords = async (req, res, next) => {
   try {
     const patientId = req.user._id;
@@ -196,9 +179,7 @@ module.exports.healthRecords = async (req, res, next) => {
   }
 };
 
-/**
- * Render prescriptions for the patient.
- */
+
 module.exports.prescriptions = async (req, res, next) => {
   try {
     const patientId = req.user._id;
@@ -212,9 +193,6 @@ module.exports.prescriptions = async (req, res, next) => {
   }
 };
 
-/**
- * Remove a prescription (file) from an appointment's attachments.
- */
 module.exports.deletePrescription = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -242,9 +220,7 @@ module.exports.deletePrescription = async (req, res, next) => {
   }
 };
 
-/**
- * Render billing records for the patient.
- */
+
 module.exports.billings = async (req, res, next) => {
   try {
     const patientId = req.user._id;
@@ -258,9 +234,7 @@ module.exports.billings = async (req, res, next) => {
   }
 };
 
-/**
- * Delete a billing file from the attachments.
- */
+
 module.exports.deleteBilling = async (req, res, next) => {
   try {
     const billingId = req.params.id;
@@ -289,9 +263,7 @@ module.exports.deleteBilling = async (req, res, next) => {
   }
 };
 
-/**
- * Render the patient's list of doctors.
- */
+
 module.exports.doctors = async (req, res, next) => {
   try {
     const patientId = req.user._id;
@@ -308,12 +280,9 @@ module.exports.doctors = async (req, res, next) => {
   }
 };
 
-/**
- * Process booking of a new appointment.
- */
+
 module.exports.bookAppointment = async (req, res, next) => {
   try {
-    // User must be authenticated; otherwise, this route should not be reached.
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized: Please log in." });
     }
@@ -329,16 +298,16 @@ module.exports.bookAppointment = async (req, res, next) => {
     const patientId = req.user._id;
     const { doctorId, appointmentDate, timeSlot, reason } = value.patient;
 
-    // Get doctor details to check availability
+   
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       req.flash("error", "Doctor not found.");
       return res.redirect(`/patient/bookappointment/${doctorId}`);
     }
 
-    // Check if the requested time slot is available
+    
     const appointmentDateObj = new Date(appointmentDate);
-    // Prevent booking in the past (compare by date only)
+    
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
     if (appointmentDateObj < startOfToday) {
@@ -350,7 +319,7 @@ module.exports.bookAppointment = async (req, res, next) => {
       return res.redirect(`/patient/bookappointment/${doctorId}`);
     }
 
-    // Check if there are any existing appointments at the same time
+ 
     const existingAppointment = await Appointment.findOne({
       doctorId,
       date: appointmentDateObj,
@@ -361,7 +330,7 @@ module.exports.bookAppointment = async (req, res, next) => {
     if (existingAppointment) {
       req.flash("error", "This time slot is already booked. Please choose a different time.");
       return res.redirect(`/patient/bookappointment/${doctorId}`);
-       //return res.redirect(`/city/doctor/${doctorId}`);
+       
     }
 
     const newAppointment = new Appointment({
@@ -379,7 +348,7 @@ module.exports.bookAppointment = async (req, res, next) => {
 
     const savedAppointment = await newAppointment.save();
 
-    // Update both doctor and patient records with the new appointment
+  
     await Doctor.findByIdAndUpdate(doctorId, { $push: { appointments: savedAppointment._id } });
     await Patient.findByIdAndUpdate(patientId, { $push: { appointments: savedAppointment._id } });
 
@@ -393,15 +362,13 @@ module.exports.bookAppointment = async (req, res, next) => {
   }
 };
 
-/**
- * Get available slots for a specific doctor and date
- */
+
 module.exports.getAvailableSlots = async (req, res, next) => {
   try {
     const { doctorId, date } = req.params;
     const patientId = req.user._id;
 
-    // Validate that the patient is trying to book for themselves
+    
     if (patientId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: "Unauthorized access" });
     }
@@ -416,17 +383,17 @@ module.exports.getAvailableSlots = async (req, res, next) => {
       return res.status(400).json({ error: "Invalid date format" });
     }
 
-    // Get existing appointments for the date to filter out booked slots
+   
     const existingAppointments = await Appointment.find({
       doctorId,
       date: appointmentDate,
       status: { $in: ["pending", "confirmed"] }
     });
 
-    // Generate all available slots
+   
     const allSlots = generateAppointmentSlots(doctor, appointmentDate);
 
-    // Filter out already booked slots
+  
     const availableSlots = allSlots.filter(slot => {
       const slotTime = `${slot.startTime}-${slot.endTime}`;
       return !existingAppointments.some(appointment => appointment.timeSlot === slotTime);
@@ -446,9 +413,7 @@ module.exports.getAvailableSlots = async (req, res, next) => {
   }
 };
 
-/**
- * Render calendar for the patient.
- */
+
 module.exports.calendar = async (req, res, next) => {
   try {
     const patientId = req.user._id;

@@ -27,7 +27,6 @@
           </div>
         </form>
 
-        <!-- Log in with Google -->
         <div class="text-center mt-3">
             <button class="btn btn-outline-danger rounded-circle m-1" style="width: 40px; height: 40px;" onclick="googleLogIn()">
                 <i class="fa-brands fa-google"></i>
@@ -41,19 +40,19 @@
         </div>
     </div>
 
-    <!-- Alert for Google Login Issues -->
+  
     <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-        <!-- No Account Alert -->
+       
         <div id="NoAccountAlert" class="alert alert-warning alert-dismissible fade show d-none mt-3 mx-3" role="alert">
-            <!-- Message appears here -->
+           
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </div>
 </div>
 
-  <!-- Firebase App (the core Firebase SDK) -->
+ 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <!-- Firebase Auth -->
+ 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
@@ -67,7 +66,7 @@
         });
     });
 
-    // Your Firebase config from Step 3
+    
     const firebaseConfig = {
       apiKey: "AIzaSyBL1BHmP43qqUQlOWIMGQ27WtMoLai8Klg",
       authDomain: "aarogyam-71fdd.firebaseapp.com",
@@ -77,7 +76,7 @@
       appId: "1:672290909959:web:cb07d4832e2137ae2cdfa2"
     };
 
-    // Initialize Firebase
+   
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
@@ -89,13 +88,13 @@
           fetch('/auth/google-login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({  // Passed as a JSON object
+            body: JSON.stringify({  
               email: user.email,
               username:  user.displayName,
               uid:  user.uid
             })
           })
-        .then(res => res.json()) // Convert into js object
+        .then(res => res.json()) 
         .then(data => {
             if (data.success) {
               const destination = data.role === 'doctor'
@@ -103,7 +102,7 @@
                 : '/patient/dashboard';
               window.location.href = destination;
             } else {
-                // Show alert and insert dynamic message
+                
                 const alertBox = document.getElementById("NoAccountAlert");
                 alertBox.innerHTML = `${data.message} <strong><a href="/auth/signup">Sign up now</a></strong>`;
                 alertBox.classList.remove("d-none");

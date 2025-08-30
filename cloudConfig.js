@@ -8,7 +8,6 @@ cloudinary.config({
     api_secret:process.env.CLOUD_API_SECRET,
 });
 
-// Force ALL files to be uploaded as raw files - this ensures PDFs work properly
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {

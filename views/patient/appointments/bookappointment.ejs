@@ -124,7 +124,6 @@
     </div>
 </div>
 
-<!-- Bootstrap Form Validation Script -->
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const form = document.getElementById("appointmentForm");
@@ -138,23 +137,23 @@
     });
 </script>
 
-<!-- Dynamic Time Slot Update Script -->
+
 <script>
-    // Doctor availability data from the server
+    
     const doctorAvailability = <%- JSON.stringify(doctor.availabilitySlots || []) %>;
     
     document.addEventListener("DOMContentLoaded", function() {
         const dateInput = document.getElementById("appointmentDate");
         const timeSlotSelect = document.getElementById("timeSlotSelect");
         
-        // Set initial date to today
+
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
         
-        // Update time slots when date changes
+        
         dateInput.addEventListener("change", updateTimeSlots);
         
-        // Initial update
+        
         updateTimeSlots();
         
         function updateTimeSlots() {
@@ -162,7 +161,7 @@
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const dayOfWeek = days[selectedDate.getDay()];
             
-            // Clear existing options
+    
             timeSlotSelect.innerHTML = '<option value="" selected disabled>Select a time slot</option>';
             
             if (!doctorAvailability || doctorAvailability.length === 0) {
@@ -170,7 +169,7 @@
                 return;
             }
             
-            // Filter slots for the selected day
+            
             var daySlots = [];
             for (var i = 0; i < doctorAvailability.length; i++) {
                 if (doctorAvailability[i].day === dayOfWeek) {
@@ -182,8 +181,7 @@
                 timeSlotSelect.innerHTML = '<option value="" disabled>No available slots for ' + dayOfWeek + '</option>';
                 return;
             }
-            
-            // Add available slots
+          
             for (var j = 0; j < daySlots.length; j++) {
                 var slot = daySlots[j];
                 var option = document.createElement('option');

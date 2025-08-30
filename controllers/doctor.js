@@ -9,7 +9,6 @@ const HealthRecord = require("../models/healthrecord");
 const Billing = require("../models/billing");
 const ExpressError = require("../utils/ExpressError");
 
-// Render Doctor Dashboard
 module.exports.dashboard = async (req, res, next) => {
   try {
     const doctor = await Doctor.findById(req.user._id);
@@ -25,7 +24,6 @@ module.exports.dashboard = async (req, res, next) => {
   }
 };
 
-// Render Availability Management Page
 module.exports.availability = async (req, res, next) => {
   try {
     const doctor = await Doctor.findById(req.user._id);
@@ -41,7 +39,7 @@ module.exports.availability = async (req, res, next) => {
   }
 };
 
-// Update Doctor Availability
+
 module.exports.updateAvailability = async (req, res, next) => {
   try {
     const doctorId = req.user._id;
@@ -75,7 +73,6 @@ module.exports.updateAvailability = async (req, res, next) => {
       }
     });
 
-    // Update doctor's availability slots
     doctor.availabilitySlots = allSlots;
     await doctor.save();
 
@@ -88,7 +85,6 @@ module.exports.updateAvailability = async (req, res, next) => {
   }
 };
 
-// List all Appointments
 module.exports.appointments = async (req, res, next) => {
   try {
     const doctorId = req.user._id;
@@ -102,7 +98,7 @@ module.exports.appointments = async (req, res, next) => {
   }
 };
 
-// Render Add Appointment Details Page
+
 module.exports.renderAddAppointmentDetails = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
@@ -121,7 +117,7 @@ module.exports.renderAddAppointmentDetails = async (req, res, next) => {
   }
 };
 
-// Render Edit Appointment Page
+
 module.exports.renderEditAppointment = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
@@ -133,7 +129,7 @@ module.exports.renderEditAppointment = async (req, res, next) => {
     }
      const doctorId = req.user._id;
     const doctor = await Doctor.findById(doctorId);
-    // Fetch associated health record and billing details
+    
     const healthRecord = await HealthRecord.findOne({ patientId: appointment.patientId });
     const billing = await Billing.findOne({ patientId: appointment.patientId });
     res.render("doctor/editAppointment", { appointment, healthRecord, billing ,doctor});
@@ -144,7 +140,6 @@ module.exports.renderEditAppointment = async (req, res, next) => {
   }
 };
 
-// List Patients for the Doctor
 module.exports.patients = async (req, res, next) => {
   try {
     const doctorId = req.user._id;
@@ -161,7 +156,6 @@ module.exports.patients = async (req, res, next) => {
   }
 };
 
-// Display Health Records for a Specific Patient
 module.exports.healthRecords = async (req, res, next) => {
   try {
     const patientId = req.params.id;
@@ -181,7 +175,6 @@ module.exports.healthRecords = async (req, res, next) => {
   }
 };
 
-// Render Prescriptions between a Doctor and a Patient
 module.exports.prescriptions = async (req, res, next) => {
   try {
     const { doctorId, patientId } = req.params;
@@ -200,7 +193,7 @@ module.exports.prescriptions = async (req, res, next) => {
   }
 };
 
-// Generate a Medical Certificate PDF for a Patient
+
 module.exports.generateCertificate = async (req, res, next) => {
   try {
     const { admissionDate, dischargeDate } = req.body;
@@ -213,17 +206,16 @@ module.exports.generateCertificate = async (req, res, next) => {
     const certificatesDir = path.join(__dirname, "../public/certificates");
     const filePath = path.join(certificatesDir, fileName);
 
-    // Ensure that the certificates directory exists
+   
     if (!fs.existsSync(certificatesDir)) {
       fs.mkdirSync(certificatesDir, { recursive: true });
     }
 
-    // Create the PDF document
+  
     const doc = new PDFDocument();
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // Add content to the certificate
     doc.fontSize(20).text("Medical Leave Certificate", { align: "center" }).moveDown();
     doc.fontSize(12).text(`Patient Name: ${patient.username}`);
     doc.text(`Email: ${patient.email}`);
@@ -283,7 +275,7 @@ module.exports.addAppointmentDetails = async (req, res, next) => {
     }
     await appointment.save();
 
-    // Create a new health record
+    
     const healthRecord = new HealthRecord({
       patientId: appointment.patientId,
       doctorId: appointment.doctorId,
@@ -317,24 +309,24 @@ module.exports.addAppointmentDetails = async (req, res, next) => {
   }
 };
 
-// Edit Appointment Details (POST)
+
 module.exports.editAppointment = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
     const { symptoms, disease, amount } = req.body.patient;
 
-    // Validate mandatory fields
+   
     if (!disease || !symptoms) {
       req.flash("error", "Disease and symptoms are required.");
       return res.redirect("back");
     }
 
-    // Extract uploaded files paths
+    
     const prescriptionUrl = req.files?.["patient[prescription]"]?.[0]?.path || null;
     const medicalReports = req.files?.["patient[medicalReports]"]?.map(file => file.path) || [];
     const billUrl = req.files?.["patient[bill]"]?.[0]?.path || null;
 
-    // Find and update appointment details
+    
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
       req.flash("error", "Appointment not found.");
@@ -343,11 +335,11 @@ module.exports.editAppointment = async (req, res, next) => {
     appointment.disease = disease;
     appointment.summary = symptoms;
     if (prescriptionUrl) {
-      appointment.attachments = [prescriptionUrl]; // Replace previous prescription if any
+      appointment.attachments = [prescriptionUrl]; 
     }
     await appointment.save();
 
-    // Update the associated health record
+   
     const healthRecord = await HealthRecord.findOne({ patientId: appointment.patientId });
     if (healthRecord) {
       healthRecord.disease = disease;
@@ -358,7 +350,7 @@ module.exports.editAppointment = async (req, res, next) => {
       await healthRecord.save();
     }
 
-    // Update the billing record
+    
     const billing = await Billing.findOne({ patientId: appointment.patientId });
     if (billing) {
       billing.reason = disease;
@@ -378,7 +370,7 @@ module.exports.editAppointment = async (req, res, next) => {
   }
 };
 
-// Confirm an Appointment (POST)
+
 module.exports.confirmAppointment = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
@@ -388,16 +380,16 @@ module.exports.confirmAppointment = async (req, res, next) => {
       return res.redirect("/doctor/appointments");
     }
 
-    // Update appointment status
+  
     appointment.status = "confirmed";
     await appointment.save();
 
-    // Add the patient to the doctor's list (avoiding duplicates)
+   
     await Doctor.findByIdAndUpdate(appointment.doctorId, {
       $addToSet: { patients: appointment.patientId }
     });
 
-    // Add the doctor to the patient's list (avoiding duplicates)
+    
     await Patient.findByIdAndUpdate(appointment.patientId, {
       $addToSet: { doctors: appointment.doctorId }
     });
@@ -411,7 +403,7 @@ module.exports.confirmAppointment = async (req, res, next) => {
   }
 };
 
-// Calendar for Doctor
+
 module.exports.calendar = async (req, res, next) => {
   try {
     const doctorId = req.user._id;

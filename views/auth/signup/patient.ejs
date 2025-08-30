@@ -164,13 +164,12 @@
           <input type="file" name="profile" id="profile" class="form-control" required accept="image/*">
         </div>
       
-        <!-- Submit Button -->
         <div class="d-flex justify-content-center">
           <button type="submit" class="btn btn-primary">Sign up</button>
         </div>
       </form> 
 
-      <!-- Optional Google Sign Up -->
+    
       <div class="text-center">
         <button class="btn btn-outline-danger mt-4 m-1" onclick="googleSignIn()"><i class="fa-brands fa-google"></i> oogle</button>
         <button class="btn btn-outline-primary mt-4 m-1" onclick=""><i class="fa-brands fa-facebook-f"></i> acebook</button>
@@ -179,9 +178,9 @@
     </div>
   </div>
 
-  <!-- Beautiful Bootstrap Alert -->
+  
   <div class="position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-    <!-- User Exist Alert -->
+    
     <div id="userExistAlert" class="alert alert-warning alert-dismissible fade show d-none mt-3 mx-3" role="alert">
       <strong>👋 Welcome back!</strong> You already have an account.
     </div>
@@ -192,19 +191,19 @@
     </div>
   </div>
 
-  <!-- Firebase App (the core Firebase SDK) -->
+  
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <!-- Firebase Auth -->
+
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
   <script>
-    // Bootstrap custom validation script
+
     (function () {
       'use strict';
       window.addEventListener('load', function () {
-        // Get all the forms we want to apply custom Bootstrap validation styles to
+        
         var forms = document.getElementsByClassName('needs-validation');
-        // Loop over them and prevent submission if invalid
+     
         Array.prototype.filter.call(forms, function (form) {
           form.addEventListener('submit', function (event) {
             if (form.checkValidity() === false) {
@@ -217,7 +216,7 @@
       }, false);
     })();
 
-    // Your Firebase config from Step 3
+    
     const firebaseConfig = {
       apiKey: "AIzaSyBL1BHmP43qqUQlOWIMGQ27WtMoLai8Klg",
       authDomain: "aarogyam-71fdd.firebaseapp.com",
@@ -227,7 +226,7 @@
       appId: "1:672290909959:web:cb07d4832e2137ae2cdfa2"
     };
 
-    // Initialize Firebase
+   
     firebase.initializeApp(firebaseConfig);
 
     const auth = firebase.auth();
@@ -240,30 +239,29 @@
           fetch('/auth/google/patient', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({  // Passed as a JSON object
+            body: JSON.stringify({  
               email: user.email,
               username:  user.displayName,
               uid:  user.uid
             })
           })
-          .then(res => res.json()) // Convert into js object
+          .then(res => res.json()) 
           .then(data => {
             if (!data.success) {
               document.getElementById("saveErrorAlert").classList.remove("d-none");
               return;
             }
-            // if they already existed we show popup and logged in
+            
             if (!data.isNewUser) {
               document.getElementById("userExistAlert").classList.remove("d-none");
             }
-            // role-based redirect
-            // Redirect after short delay so user can see toast
+            
             setTimeout(() => {
               const destination = data.role === 'doctor'
                 ? '/doctor/dashboard'
                 : '/patient/dashboard';
               window.location.href = destination;
-            }, 2000);  // Wait 2 seconds before redirect
+            }, 2000);  
           });
         })
         .catch((error) => {

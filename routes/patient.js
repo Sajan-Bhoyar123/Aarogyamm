@@ -8,7 +8,7 @@ const Billing = require("../models/billing");
 const Patient = require("../models/patient")
 const AIService = require('../utils/aiService');
 
-// GET routes
+
 router.get("/dashboard", isAuthenticated, patientController.dashboard);
 router.get("/upcomingappointments", isAuthenticated, patientController.upcomingAppointments);
 router.get("/todaysappointments", isAuthenticated, patientController.todaysAppointments);
@@ -20,10 +20,10 @@ router.get("/prescriptions", isAuthenticated, patientController.prescriptions);
 router.get("/doctors", isAuthenticated, patientController.doctors);
 router.get("/billings", isAuthenticated, patientController.billings);
 
-// Calendar route
+
 router.get("/calendar", patientController.calendar);
 
-// Grouped DELETE routes for canceling appointments
+
 ["upcomingappointments", "todaysappointments", "pastappointments"].forEach(type => {
   router
     .route(`/${type}/cancel/:id`)
@@ -34,7 +34,7 @@ router.get("/calendar", patientController.calendar);
     );
 });
 
-// POST routes for deleting files
+
 router
   .route("/prescriptions/delete/:id")
   .post(
@@ -51,12 +51,12 @@ router
     patientController.deleteBilling
   );
 
-// POST route for booking appointment
+
 router
   .route("/bookappointment")
   .post(isAuthenticated, patientController.bookAppointment);
 
-// GET route for available slots
+
 router.get("/available-slots/:doctorId/:date", isAuthenticated, patientController.getAvailableSlots);
 
 router.get("/chat",async (req, res) => {
@@ -65,7 +65,7 @@ router.get("/chat",async (req, res) => {
   res.render("patient/chat",{patient});
 });  
 
-// POST route for chat messages
+
 router.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -76,7 +76,7 @@ router.post("/chat", async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Generate AI response using the new AI service
+    
     const aiResponse = await AIService.generateResponse(message, 'patient', patient.username);
 
     res.json({ 
