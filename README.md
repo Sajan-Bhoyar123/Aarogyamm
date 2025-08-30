@@ -1,64 +1,114 @@
-Healthcare Management System
+# Aarogyam - Healthcare Management System
 
-A digital platform designed to securely manage student healthcare records, streamline documentation, and improve accessibility within educational institutes.
+A comprehensive healthcare management system that connects patients with doctors for appointments, medical reports, prescriptions, and billing.
 
-Project Progress (50% Completed)
-At this stage, we have implemented:
+## Features
 
- User Authentication – Secure login/signup using JWT-based authentication.
+### Patient Features
+- Book appointments with doctors
+- View upcoming, today's, and past appointments
+- Access medical records and prescriptions
+- View billing information and make payments
+- Calendar view of appointments
 
-  -Student Dashboard – View medical history, prescriptions, and past treatments.
+### Doctor Features
+- Manage appointment availability
+- **Time-based appointment management** (NEW)
+- Accept or reject appointments before appointment time
+- Add medical reports, prescriptions, and billing after appointment time
+- View patient health records
+- Generate medical certificates
+- Calendar view of appointments
 
-  - Health Record Storage – Backend API to store & retrieve medical records.
+## Time-Based Appointment Management System
 
-  -Automated Leave Documentation – System generates medical certificates and leave requests.
+### How It Works
 
-  -Appointment Booking System – Initial setup for scheduling doctor appointments.
+The system now implements a strict time-based workflow for appointment management:
 
-  - Basic UI/UX – Web & mobile interfaces designed using React.js and Flutter.
+#### Before Appointment Time
+- **Pending Appointments**: Doctors can only **Accept** or **Reject** appointments
+- **Time Validation**: Once the appointment time passes, doctors can no longer accept/reject pending appointments
+- **Status Tracking**: All status changes are timestamped
 
-Tech Stack
+#### After Appointment Time
+- **Confirmed Appointments**: Doctors can add/edit medical reports, prescriptions, and billing
+- **Time Validation**: Doctors can only add medical details after the appointment time has passed
+- **Status Requirements**: Only confirmed appointments allow medical detail entry
 
-🖥 Frontend: React.js (Web), Flutter (Mobile)
+### Appointment Status Flow
 
-🗄 Backend: Node.js with Express.js
+1. **Pending** → Patient books appointment
+2. **Confirmed** → Doctor accepts appointment (before appointment time)
+3. **Rejected** → Doctor rejects appointment (before appointment time)
+4. **Completed** → After appointment time, doctor adds medical details
 
-    Database: MongoDB
+### Technical Implementation
 
-   Authentication: JWT & bcrypt
+#### Database Changes
+- Added `rejected` status to appointment enum
+- Added `statusUpdatedAt` field to track when status was last changed
 
-    Notifications: Twilio / Firebase Cloud Messaging
+#### Utility Functions
+- `isAppointmentTimePassed()`: Checks if appointment time has elapsed
+- `canDoctorAcceptReject()`: Validates if doctor can accept/reject
+- `canDoctorAddReports()`: Validates if doctor can add medical details
 
-   Cloud Storage: AWS S3 (for medical reports & prescriptions)
+#### Controller Updates
+- Time-based validation in all appointment management functions
+- New `rejectAppointment` function
+- Enhanced error messages for time violations
 
-How to Run the Project
+#### UI Improvements
+- Dynamic action buttons based on appointment status and time
+- Warning messages for time violations
+- Color-coded status indicators
+- Modal confirmations for accept/reject actions
 
-1. Clone the Repository
+## Installation
 
-git clone https://github.com/your-repo-link.git
-cd healthcare-management-system
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables (see `.env.example`)
+4. Start the server: `npm start`
 
-2. Install Dependencies
-Backend Setup:
+## Environment Variables
 
-cd backend
-npm install
+Create a `.env` file with the following variables:
+```
+ATLASDB_URL=your_mongodb_atlas_url
+SECRET=your_session_secret
+RZP_KEY_ID=your_razorpay_key_id
+RZP_KEY_SECRET=your_razorpay_secret
+TOGETHER_API_KEY=your_together_ai_key
+```
 
-Frontend Setup:
-cd frontend
-npm install
+## Usage
 
-3. Configure Environment Variables
-Create a .env file in the backend directory and add:
+### For Patients
+1. Register/Login as a patient
+2. Search for doctors by city/specialization
+3. Book appointments with available time slots
+4. View appointment status and medical details
 
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-AWS_ACCESS_KEY=your_aws_access_key
-AWS_SECRET_KEY=your_aws_secret_key
+### For Doctors
+1. Register/Login as a doctor
+2. Set availability schedule
+3. Manage appointments:
+   - **Before appointment time**: Accept or reject pending appointments
+   - **After appointment time**: Add medical reports, prescriptions, and billing
+4. View patient health records
 
-Current Limitations & Next Steps
-  Pending Features: Appointment confirmation, advanced filtering, and notifications, document generation.
+## Technology Stack
 
-  Next Focus: Enhancing UI, securing data with encryption, and integrating email/SMS notifications.
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB with Mongoose
+- **Frontend**: EJS templates, Bootstrap
+- **Authentication**: Passport.js
+- **File Upload**: Multer, Cloudinary
+- **Payment**: Razorpay
+- **AI Chat**: Together AI
 
-This guide ensures the organizers can set up and test the project easily. Let me know if you need any refinements! 
+## License
+
+ISC 

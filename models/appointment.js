@@ -22,7 +22,7 @@ const appointmentSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ["pending", "confirmed", "completed", "cancelled"],
+        enum: ["pending", "confirmed", "rejected", "completed", "cancelled"],
         default: "pending"
     },
     reason: {
@@ -41,6 +41,10 @@ const appointmentSchema = new Schema({
     attachments: {
         type: [String],
         default: []
+    },
+    statusUpdatedAt: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true }); 
 

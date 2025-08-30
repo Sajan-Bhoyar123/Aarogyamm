@@ -42,6 +42,7 @@
     .status-confirm { color: green; font-weight: bold; }
     .status-cancelled { color: red; font-weight: bold; }
     .status-pending { color: orange; font-weight: bold; }
+    .status-rejected { color: #dc3545; font-weight: bold; }
     .actions i {
         cursor: pointer;
         font-size: 1.2rem;
@@ -96,6 +97,7 @@
                     <option value="">All Statuses</option>
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
+                    <option value="rejected">Rejected</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
@@ -149,7 +151,10 @@
                     </div>
                     <div>
                         <strong>Status</strong> <br>
-                        <small><%= appointment.status %></small>
+                        <small class="status-<%= appointment.status %>"><%= appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) %></small>
+                        <% if (appointment.status === 'rejected' && appointment.notes && appointment.notes.includes('Auto-rejected')) { %>
+                            <br><small style="color: #6c757d; font-style: italic;">(Auto-rejected by system)</small>
+                        <% } %>
                     </div>
                     <div>
                         <strong>Location</strong> <br>

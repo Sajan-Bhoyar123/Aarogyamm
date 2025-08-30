@@ -19,6 +19,11 @@
   .actions .btn {
     margin-right: 5px;
   }
+  .status-pending { color: #ffc107; font-weight: bold; }
+  .status-confirmed { color: #28a745; font-weight: bold; }
+  .status-rejected { color: #dc3545; font-weight: bold; }
+  .status-completed { color: #17a2b8; font-weight: bold; }
+  .status-cancelled { color: #6c757d; font-weight: bold; }
 </style>
 
 <div class="appointments-container container table-responsive">
@@ -29,6 +34,7 @@
         <th>#</th>
         <th>Patient Name</th>
         <th>Appointment Date</th>
+        <th>Time Slot</th>
         <th>Gender</th>
         <th>Disease</th>
         <th>Status</th>
@@ -46,20 +52,41 @@
             <td><%= idx+1 %></td>
             <td><%= appointment.patientId ? appointment.patientId.username : "N/A" %></td>
             <td><%= new Date(appointment.date).toLocaleDateString() %></td>
+            <td><%= appointment.timeSlot %></td>
             <td><%= appointment.patientId ? appointment.patientId.gender : "N/A" %></td>
             <td><%= appointment.disease || "N/A" %></td>
-            <td><%= appointment.status %></td>
+            <td class="status-<%= appointment.status %>"><%= appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) %></td>
             <td class="actions">
               <div class="d-flex">
-                <a href="/doctor/appointments/addAppointmentDetails/<%= appointment._id %>" class="btn btn-primary">
-                  <i class="fa-solid fa-plus"></i>
-                </a>
-                <a href="/doctor/appointments/edit/<%= appointment._id %>" class="btn btn-secondary">
-                  <i class="fa-solid fa-pen-to-square"></i>
-                </a>
-                <form action="/doctor/appointments/confirm/<%= appointment._id %>" method="POST" style="display:inline;">
-                  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setAppointmentId('<%= appointment._id %>')"><i class="fa-solid fa-circle-check"></i></button>
-                </form> 
+                <% if (appointment.status === 'pending' && canDoctorAcceptReject(appointment)) { %>
+                  <!-- Before appointment time: Show accept/reject buttons -->
+                  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setAppointmentId('<%= appointment._id %>', 'confirm')">
+                    <i class="fa-solid fa-circle-check"></i> Accept
+                  </button>
+                  <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="setAppointmentId('<%= appointment._id %>', 'reject')">
+                    <i class="fa-solid fa-times"></i> Reject
+                  </button>
+                <% } else if (appointment.status === 'pending' && !canDoctorAcceptReject(appointment)) { %>
+                  <!-- Appointment time has passed but still pending -->
+                  <span class="text-muted">Time expired - cannot accept/reject</span>
+                <% } else if (appointment.status === 'confirmed' && canDoctorAddReports(appointment)) { %>
+                  <!-- After appointment time and confirmed: Show add/edit buttons -->
+                  <a href="/doctor/appointments/addAppointmentDetails/<%= appointment._id %>" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Add Details
+                  </a>
+                  <a href="/doctor/appointments/edit/<%= appointment._id %>" class="btn btn-secondary">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </a>
+                <% } else if (appointment.status === 'confirmed' && !canDoctorAddReports(appointment)) { %>
+                  <!-- Confirmed but appointment time hasn't passed yet -->
+                  <span class="text-muted">Appointment time hasn't passed yet</span>
+                <% } else if (appointment.status === 'rejected') { %>
+                  <span class="text-muted">No actions available</span>
+                <% } else if (appointment.status === 'completed') { %>
+                  <a href="/doctor/appointments/edit/<%= appointment._id %>" class="btn btn-secondary">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </a>
+                <% } %>
               </div>      
             </td>
           </tr>
@@ -69,21 +96,42 @@
   </table>
 </div>
 
-<!-- Cancel Confirmation Modal -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+<!-- Confirm Appointment Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="cancelModalLabel">Appointment Confirmation</h5>
+        <h5 class="modal-title" id="confirmModalLabel">Confirm Appointment</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         Are you sure you want to confirm this appointment?
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <form id="confirmForm" method="POST">
-          <button type="submit" class="btn btn-danger">Yes, Confirm</button>
+          <button type="submit" class="btn btn-success">Yes, Confirm</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Appointment Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="rejectModalLabel">Reject Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to reject this appointment?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form id="rejectForm" method="POST">
+          <button type="submit" class="btn btn-danger">Yes, Reject</button>
         </form>
       </div>
     </div>
@@ -91,7 +139,11 @@
 </div>
 
 <script>
-  function setAppointmentId(appointmentId) {
-    document.getElementById("confirmForm").action = `/doctor/appointments/confirm/${appointmentId}`;
+  function setAppointmentId(appointmentId, action) {
+    if (action === 'confirm') {
+      document.getElementById("confirmForm").action = `/doctor/appointments/confirm/${appointmentId}`;
+    } else if (action === 'reject') {
+      document.getElementById("rejectForm").action = `/doctor/appointments/reject/${appointmentId}`;
+    }
   }
 </script>

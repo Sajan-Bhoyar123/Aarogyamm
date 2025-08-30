@@ -242,7 +242,10 @@
                             <% daySlots.forEach((slot, index) => { %>
                                 <div class="time-slot" data-day="<%= day %>" data-index="<%= index %>">
                                     <div class="time-slot-header">
-                                        <span class="time-range"><%= slot.startTime %> - <%= slot.endTime %></span>
+                                        <span class="time-range">
+                                            <%= formatTime12Hour(slot.startTime) %> - <%= formatTime12Hour(slot.endTime) %>
+                                            <small style="color: #6c757d;">(<%= slot.startTime %> - <%= slot.endTime %>)</small>
+                                        </span>
                                         <span class="slot-duration"><%= slot.slotDuration %> min</span>
                                         <button type="button" class="remove-slot-btn" onclick="removeSlot('<%= day %>', <%= index %>)">×</button>
                                     </div>

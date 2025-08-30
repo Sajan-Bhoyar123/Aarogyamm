@@ -8,6 +8,7 @@ const Appointment = require("../models/appointment");
 const HealthRecord = require("../models/healthrecord");
 const Billing = require("../models/billing");
 const ExpressError = require("../utils/ExpressError");
+const { canDoctorAddReports, canDoctorAcceptReject } = require("../utils/availabilityUtils");
 
 // Render Doctor Dashboard
 module.exports.dashboard = async (req, res, next) => {
@@ -33,7 +34,15 @@ module.exports.availability = async (req, res, next) => {
       req.flash("error", "Doctor not found.");
       return res.redirect("/auth/login");
     }
-    res.render("doctor/availability", { doctor, messages: req.flash() });
+    
+    // Add time formatting function to the view context
+    const { formatTime12Hour } = require("../utils/availabilityUtils");
+    
+    res.render("doctor/availability", { 
+      doctor, 
+      messages: req.flash(),
+      formatTime12Hour 
+    });
   } catch (err) {
     console.error("Error fetching doctor data:", err);
     req.flash("error", "Internal Server Error.");
@@ -94,7 +103,27 @@ module.exports.appointments = async (req, res, next) => {
     const doctorId = req.user._id;
     const appointments = await Appointment.find({ doctorId }).populate("patientId").populate("doctorId");
     const doctor = await Doctor.findById(doctorId);
-    res.render("doctor/appointments", { appointments,doctor });
+    
+    // Add utility functions to the view context
+    const { canDoctorAddReports, canDoctorAcceptReject, autoRejectExpiredAppointments } = require("../utils/availabilityUtils");
+    
+    // Auto-reject expired appointments
+    const updatedAppointments = await autoRejectExpiredAppointments(appointments);
+    
+    // If any appointments were auto-rejected, show a message
+    if (updatedAppointments.length > 0) {
+      req.flash("success", `${updatedAppointments.length} expired appointment(s) have been automatically rejected.`);
+    }
+    
+    // Fetch updated appointments after auto-rejection
+    const updatedAppointmentsList = await Appointment.find({ doctorId }).populate("patientId").populate("doctorId");
+    
+    res.render("doctor/appointments", { 
+      appointments: updatedAppointmentsList, 
+      doctor, 
+      canDoctorAddReports, 
+      canDoctorAcceptReject 
+    });
   } catch (err) {
     console.error("Error fetching doctor appointments:", err);
     req.flash("error", "Failed to load appointments. Please try again.");
@@ -106,14 +135,22 @@ module.exports.appointments = async (req, res, next) => {
 module.exports.renderAddAppointmentDetails = async (req, res, next) => {
   try {
     const appointmentId = req.params.id;
-     const doctorId = req.user._id;
+    const doctorId = req.user._id;
     const doctor = await Doctor.findById(doctorId);
     const appointment = await Appointment.findById(appointmentId).populate("patientId");
     if (!appointment) {
       req.flash("error", "Appointment not found.");
       return res.redirect("/doctor/appointments");
     }
-    res.render("doctor/addAppointment", { appointment ,doctor});
+    
+    // Add utility functions to the view context
+    const { canDoctorAddReports } = require("../utils/availabilityUtils");
+    
+    res.render("doctor/addAppointment", { 
+      appointment, 
+      doctor, 
+      canDoctorAddReports 
+    });
   } catch (err) {
     console.error("Error fetching appointment:", err);
     req.flash("error", "Failed to load appointment details. Please try again.");
@@ -131,12 +168,22 @@ module.exports.renderEditAppointment = async (req, res, next) => {
       req.flash("error", "Appointment not found.");
       return res.redirect("/doctor/appointments");
     }
-     const doctorId = req.user._id;
+    const doctorId = req.user._id;
     const doctor = await Doctor.findById(doctorId);
     // Fetch associated health record and billing details
     const healthRecord = await HealthRecord.findOne({ patientId: appointment.patientId });
     const billing = await Billing.findOne({ patientId: appointment.patientId });
-    res.render("doctor/editAppointment", { appointment, healthRecord, billing ,doctor});
+    
+    // Add utility functions to the view context
+    const { canDoctorAddReports } = require("../utils/availabilityUtils");
+    
+    res.render("doctor/editAppointment", { 
+      appointment, 
+      healthRecord, 
+      billing, 
+      doctor, 
+      canDoctorAddReports 
+    });
   } catch (err) {
     console.error("Error fetching data for edit:", err);
     req.flash("error", "Failed to load appointment details. Please try again.");
@@ -270,6 +317,12 @@ module.exports.addAppointmentDetails = async (req, res, next) => {
       return res.redirect("/doctor/appointments");
     }
 
+    // Check if doctor can add reports (appointment must be confirmed and time must have passed)
+    if (!canDoctorAddReports(appointment)) {
+      req.flash("error", "Cannot add appointment details. The appointment must be confirmed and the appointment time must have passed.");
+      return res.redirect("/doctor/appointments");
+    }
+
     // Extract the uploaded file paths
     const prescriptionUrl = req.files["patient[prescription]"]?.[0]?.path || null;
     const medicalReports = req.files["patient[medicalReports]"]?.map(file => file.path) || [];
@@ -340,6 +393,13 @@ module.exports.editAppointment = async (req, res, next) => {
       req.flash("error", "Appointment not found.");
       return res.redirect("/doctor/appointments");
     }
+
+    // Check if doctor can add reports (appointment must be confirmed and time must have passed)
+    if (!canDoctorAddReports(appointment)) {
+      req.flash("error", "Cannot edit appointment details. The appointment must be confirmed and the appointment time must have passed.");
+      return res.redirect("/doctor/appointments");
+    }
+
     appointment.disease = disease;
     appointment.summary = symptoms;
     if (prescriptionUrl) {
@@ -388,8 +448,15 @@ module.exports.confirmAppointment = async (req, res, next) => {
       return res.redirect("/doctor/appointments");
     }
 
+    // Check if doctor can accept/reject this appointment
+    if (!canDoctorAcceptReject(appointment)) {
+      req.flash("error", "Cannot accept appointment. Either the appointment time has passed or it's not in pending status.");
+      return res.redirect("/doctor/appointments");
+    }
+
     // Update appointment status
     appointment.status = "confirmed";
+    appointment.statusUpdatedAt = new Date();
     await appointment.save();
 
     // Add the patient to the doctor's list (avoiding duplicates)
@@ -407,6 +474,36 @@ module.exports.confirmAppointment = async (req, res, next) => {
   } catch (err) {
     console.error("Error confirming appointment:", err);
     req.flash("error", "Internal Server Error while confirming appointment.");
+    res.redirect("/doctor/appointments");
+  }
+};
+
+// Reject an Appointment (POST)
+module.exports.rejectAppointment = async (req, res, next) => {
+  try {
+    const appointmentId = req.params.id;
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      req.flash("error", "Appointment not found.");
+      return res.redirect("/doctor/appointments");
+    }
+
+    // Check if doctor can accept/reject this appointment
+    if (!canDoctorAcceptReject(appointment)) {
+      req.flash("error", "Cannot reject appointment. Either the appointment time has passed or it's not in pending status.");
+      return res.redirect("/doctor/appointments");
+    }
+
+    // Update appointment status
+    appointment.status = "rejected";
+    appointment.statusUpdatedAt = new Date();
+    await appointment.save();
+
+    req.flash("success", "Appointment rejected successfully.");
+    res.redirect("/doctor/appointments");
+  } catch (err) {
+    console.error("Error rejecting appointment:", err);
+    req.flash("error", "Internal Server Error while rejecting appointment.");
     res.redirect("/doctor/appointments");
   }
 };

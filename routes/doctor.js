@@ -49,6 +49,7 @@ router
 // POST-only routes
 router.post("/generate-certificate/:patientId", doctorController.generateCertificate);
 router.post("/appointments/confirm/:id", doctorController.confirmAppointment);
+router.post("/appointments/reject/:id", doctorController.rejectAppointment);
 
 // Chat routes
 router.get("/chat", async (req, res) => {

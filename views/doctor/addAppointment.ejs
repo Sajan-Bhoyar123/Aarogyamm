@@ -49,6 +49,19 @@
     <div class="form-header">
         <h2><strong><%= appointment.patientId.username %></strong>'s Appointment</h2>
     </div>
+    
+    <% if (!canDoctorAddReports(appointment)) { %>
+        <div class="alert alert-warning" role="alert">
+            <strong>Warning:</strong> You can only add appointment details after the appointment time has passed and the appointment is confirmed.
+            <br>
+            <strong>Appointment Date:</strong> <%= new Date(appointment.date).toLocaleDateString() %>
+            <br>
+            <strong>Time Slot:</strong> <%= appointment.timeSlot %>
+            <br>
+            <strong>Status:</strong> <%= appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) %>
+        </div>
+    <% } %>
+    
     <div class="appointment-form-container my-3">
         <form action="/doctor/appointments/addAppointmentDetails/<%= appointment._id %>" method="POST" enctype="multipart/form-data">
             <div class="form-group">

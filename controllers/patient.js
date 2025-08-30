@@ -8,7 +8,7 @@ const HealthRecord = require("../models/healthrecord");
 const Billing = require("../models/billing");
 const { isSlotAvailable } = require("../utils/availabilityUtils");
 const { generateAppointmentSlots } = require("../utils/availabilityUtils");
-
+const { validateAppointmentDate, validateAppointmentTime, validateAppointmentTimeWithBuffer } = require("../utils/availabilityUtils");
 const { appointmentSchema } = require('../schema');
 const ExpressError = require("../utils/ExpressError");
 
@@ -45,8 +45,31 @@ module.exports.upcomingAppointments = async (req, res, next) => {
     })
       .populate("patientId")
       .populate("doctorId");
+    
+    // Add utility functions to handle auto-rejection
+    const { autoRejectExpiredAppointments } = require("../utils/availabilityUtils");
+    
+    // Auto-reject expired appointments
+    const updatedAppointments = await autoRejectExpiredAppointments(appointments);
+    
+    // If any appointments were auto-rejected, show a message
+    if (updatedAppointments.length > 0) {
+      req.flash("info", `${updatedAppointments.length} expired appointment(s) have been automatically rejected by the system.`);
+    }
+    
+    // Fetch updated appointments after auto-rejection
+    const updatedAppointmentsList = await Appointment.find({
+      patientId,
+      date: { $gte: tomorrow }
+    })
+      .populate("patientId")
+      .populate("doctorId");
+    
     const patient = await Patient.findById(patientId);
-    res.render("patient/appointments/upcomingappointments", { appointments,patient });
+    res.render("patient/appointments/upcomingappointments", { 
+      appointments: updatedAppointmentsList, 
+      patient 
+    });
   } catch (err) {
     console.error("Error fetching upcoming appointments:", err);
     req.flash("error", "Internal Server Error.");
@@ -95,8 +118,31 @@ module.exports.pastAppointments = async (req, res, next) => {
     })
       .populate("patientId")
       .populate("doctorId");
+    
+    // Add utility functions to handle auto-rejection
+    const { autoRejectExpiredAppointments } = require("../utils/availabilityUtils");
+    
+    // Auto-reject expired appointments
+    const updatedAppointments = await autoRejectExpiredAppointments(appointments);
+    
+    // If any appointments were auto-rejected, show a message
+    if (updatedAppointments.length > 0) {
+      req.flash("info", `${updatedAppointments.length} expired appointment(s) have been automatically rejected by the system.`);
+    }
+    
+    // Fetch updated appointments after auto-rejection
+    const updatedAppointmentsList = await Appointment.find({
+      patientId,
+      date: { $lt: today }
+    })
+      .populate("patientId")
+      .populate("doctorId");
+    
     const patient = await Patient.findById(patientId);
-    res.render("patient/appointments/pastappointments", { appointments,patient });
+    res.render("patient/appointments/pastappointments", { 
+      appointments: updatedAppointmentsList, 
+      patient 
+    });
   } catch (err) {
     console.error("Error fetching past appointments:", err);
     req.flash("error", "Internal Server Error.");
@@ -172,7 +218,16 @@ module.exports.bookAppointmentPage = async (req, res, next) => {
     const patient = await Patient.findById(patientId);
     let {doctorId} = req.params;
     const doctor = await Doctor.findById(doctorId);
-    res.render("patient/appointments/bookappointment", { doctor,patient });
+    
+    // Add date validation functions to the view context
+    const { getMinBookingDate, getMaxBookingDate } = require("../utils/availabilityUtils");
+    
+    res.render("patient/appointments/bookappointment", { 
+      doctor, 
+      patient, 
+      minBookingDate: getMinBookingDate(),
+      maxBookingDate: getMaxBookingDate()
+    });
   } catch (err) {
     console.error("Error rendering appointment booking page:", err);
     req.flash("error", "Internal Server Error.");
@@ -338,11 +393,22 @@ module.exports.bookAppointment = async (req, res, next) => {
 
     // Check if the requested time slot is available
     const appointmentDateObj = new Date(appointmentDate);
-    // Prevent booking in the past (compare by date only)
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    if (appointmentDateObj < startOfToday) {
-      req.flash("error", "Appointment date must be today or a future date.");
+    
+    // Validate appointment date (today to 1 week in advance)
+    const { validateAppointmentDate, validateAppointmentTime } = require("../utils/availabilityUtils");
+    const dateValidation = validateAppointmentDate(appointmentDateObj);
+    
+    if (!dateValidation.isValid) {
+      req.flash("error", dateValidation.message);
+      return res.redirect(`/patient/bookappointment/${doctorId}`);
+    }
+    
+    // Validate appointment time for same-day bookings
+    //const timeValidation = validateAppointmentTime(appointmentDateObj, timeSlot);
+    const timeValidation = validateAppointmentTimeWithBuffer(appointmentDateObj, timeSlot);
+    
+    if (!timeValidation.isValid) {
+      req.flash("error", timeValidation.message);
       return res.redirect(`/patient/bookappointment/${doctorId}`);
     }
     if (!isSlotAvailable(doctor, appointmentDateObj, timeSlot)) {
@@ -426,10 +492,21 @@ module.exports.getAvailableSlots = async (req, res, next) => {
     // Generate all available slots
     const allSlots = generateAppointmentSlots(doctor, appointmentDate);
 
-    // Filter out already booked slots
+    // Filter out already booked slots and time slots that are too close for same-day bookings
+    const { validateAppointmentTime } = require("../utils/availabilityUtils");
     const availableSlots = allSlots.filter(slot => {
       const slotTime = `${slot.startTime}-${slot.endTime}`;
-      return !existingAppointments.some(appointment => appointment.timeSlot === slotTime);
+      
+      // Check if slot is already booked
+      const isBooked = existingAppointments.some(appointment => appointment.timeSlot === slotTime);
+      if (isBooked) return false;
+      
+      // Check if slot is too close to current time for same-day bookings
+      //const timeValidation = validateAppointmentTime(appointmentDate, slotTime);
+      const timeValidation = validateAppointmentTimeWithBuffer(appointmentDate, slotTime);
+      if (!timeValidation.isValid) return false;
+      
+      return true;
     });
 
     res.json({

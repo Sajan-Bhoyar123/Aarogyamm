@@ -48,6 +48,18 @@
     <div class="form-header">
         <h2>Book an Appointment</h2>
     </div>
+    
+    <!-- Enhanced Validation Rules Display -->
+    <div class="alert alert-info" role="alert">
+        <h5><strong>📅 Appointment Booking Rules:</strong></h5>
+        <ul class="mb-0">
+            <li><strong>✅ ALLOWED:</strong> Today or any future date</li>
+            <li><strong>❌ NOT ALLOWED:</strong> Past dates</li>
+            <li><strong>❌ NOT ALLOWED:</strong> Dates more than 1 week in advance</li>
+            <li><strong>⏰ SAME-DAY BOOKING:</strong> Can ONLY book if current time is AT LEAST 30 minutes BEFORE appointment time</li>
+        </ul>
+    </div>
+    
     <div class="appointment-form-container my-3">
         <form id="appointmentForm" action="/patient/bookappointment" method="POST" enctype="application/x-www-form-urlencoded" class="needs-validation" novalidate>
             <div class="row">
@@ -99,9 +111,13 @@
         
             <div class="mb-2">
                 <label class="form-label">Appointment Date</label>
-                <input type="date" name="patient[appointmentDate]" id="appointmentDate" class="form-control" required min="<%= new Date().toISOString().split('T')[0] %>">
-                <div class="invalid-feedback">Please select a date.</div>
-                <small class="form-text text-muted">Available time slots will update based on your selected date.</small>
+                <input type="date" name="patient[appointmentDate]" id="appointmentDate" class="form-control" required 
+                       min="<%= minBookingDate %>" max="<%= maxBookingDate %>">
+                <div class="invalid-feedback">Please select a valid date.</div>
+                <small class="form-text text-muted">
+                    You can book appointments from today up to 1 week in advance. 
+                    Available time slots will update based on your selected date.
+                </small>
             </div>
         
             <div class="mb-2">
@@ -110,7 +126,7 @@
                     <option value="" selected disabled>Select a date first to see available slots</option>
                 </select>
                 <div class="invalid-feedback">Please choose a time slot.</div>
-                <small class="form-text text-muted">Only time slots available on the selected date will be shown.</small>
+                <small class="form-text text-muted">Only time slots available on the selected date will be shown in AM/PM format.</small>
             </div>
         
             <div class="mb-2">
@@ -138,10 +154,27 @@
     });
 </script>
 
-<!-- Dynamic Time Slot Update Script -->
+<!-- Enhanced Dynamic Time Slot Update Script with AM/PM Format -->
 <script>
     // Doctor availability data from the server
     const doctorAvailability = <%- JSON.stringify(doctor.availabilitySlots || []) %>;
+    
+    // Function to convert 24-hour time to 12-hour AM/PM format
+    function convertTo12Hour(time24) {
+        const [hours, minutes] = time24.split(':');
+        let hour = parseInt(hours);
+        const minute = minutes;
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        
+        // Convert hour to 12-hour format
+        if (hour === 0) {
+            hour = 12; // Midnight
+        } else if (hour > 12) {
+            hour = hour - 12; // Afternoon/Evening
+        }
+        
+        return `${hour}:${minute} ${ampm}`;
+    }
     
     document.addEventListener("DOMContentLoaded", function() {
         const dateInput = document.getElementById("appointmentDate");
@@ -150,6 +183,24 @@
         // Set initial date to today
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
+        
+        // Add client-side date validation
+        dateInput.addEventListener("input", function() {
+            const selectedDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const oneWeekFromToday = new Date(today);
+            oneWeekFromToday.setDate(today.getDate() + 7);
+            
+            if (selectedDate < today) {
+                this.setCustomValidity("❌ You CANNOT book a PAST DATE! Please select today or a future date.");
+            } else if (selectedDate > oneWeekFromToday) {
+                this.setCustomValidity("❌ You CANNOT book a date MORE THAN 1 WEEK from today! Please select a date within the next 7 days.");
+            } else {
+                this.setCustomValidity("");
+            }
+        });
         
         // Update time slots when date changes
         dateInput.addEventListener("change", updateTimeSlots);
@@ -183,12 +234,51 @@
                 return;
             }
             
-            // Add available slots
+            // Add available slots with AM/PM format and 30-minute buffer check
             for (var j = 0; j < daySlots.length; j++) {
                 var slot = daySlots[j];
                 var option = document.createElement('option');
+                
+                // Keep the original 24-hour format for the value (for backend processing)
                 option.value = slot.startTime + '-' + slot.endTime;
-                option.textContent = slot.startTime + ' - ' + slot.endTime + ' (' + slot.slotDuration + ' min)';
+                
+                // Convert times to AM/PM format for display
+                var startTimeAMPM = convertTo12Hour(slot.startTime);
+                var endTimeAMPM = convertTo12Hour(slot.endTime);
+                
+                // Check if this is a same-day booking
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                var selectedDateOnly = new Date(selectedDate);
+                selectedDateOnly.setHours(0, 0, 0, 0);
+                var isToday = selectedDateOnly.getTime() === today.getTime();
+                
+                if (isToday) {
+                    // For same-day bookings, check 30-minute buffer
+                    var startTimeParts = slot.startTime.split(':');
+                    var hours = parseInt(startTimeParts[0]);
+                    var minutes = parseInt(startTimeParts[1]);
+                    
+                    var appointmentDateTime = new Date();
+                    appointmentDateTime.setHours(hours, minutes, 0, 0);
+                    
+                    var now = new Date();
+                    var timeDifferenceMs = appointmentDateTime.getTime() - now.getTime();
+                    var timeDifferenceMinutes = Math.floor(timeDifferenceMs / (1000 * 60));
+                    
+                    if (timeDifferenceMinutes < 30) {
+                        option.disabled = true;
+                        option.style.backgroundColor = '#f8f9fa';
+                        option.style.color = '#6c757d';
+                        option.textContent = startTimeAMPM + ' - ' + endTimeAMPM + ' (Too soon - need 30 min buffer)';
+                    } else {
+                        option.textContent = startTimeAMPM + ' - ' + endTimeAMPM + ' (' + slot.slotDuration + ' min) ✅';
+                    }
+                } else {
+                    // For future dates, show normal AM/PM format
+                    option.textContent = startTimeAMPM + ' - ' + endTimeAMPM + ' (' + slot.slotDuration + ' min)';
+                }
+                
                 timeSlotSelect.appendChild(option);
             }
         }
