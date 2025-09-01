@@ -858,10 +858,14 @@ module.exports.confirmAppointment = async (req, res, next) => {
       return res.redirect("/doctor/appointments");
     }
 
-    // Update appointment status
+    // SLOT CONFIRMATION LOGIC: Update appointment status to "confirmed"
+    // This permanently reserves the slot and removes it from patient view
     appointment.status = "confirmed";
     appointment.statusUpdatedAt = new Date();
+    appointment.confirmedAt = new Date();
     await appointment.save();
+    
+    console.log(`Slot confirmed: ${appointment.timeSlot} on ${appointment.date} is now permanently booked`);
 
     // Add the patient to the doctor's list (avoiding duplicates)
     await Doctor.findByIdAndUpdate(appointment.doctorId, {
@@ -912,12 +916,15 @@ module.exports.rejectAppointment = async (req, res, next) => {
       return res.redirect("/doctor/appointments");
     }
 
-    // SLOT RELEASE LOGIC: Update appointment status to "rejected"
+    // ENHANCED SLOT RELEASE LOGIC: Update appointment status to "rejected"
     // This automatically frees up the time slot for other patients to book
-    // since getAvailableSlots only excludes "pending" and "confirmed" appointments
+    // The slot will become available again since rejected appointments are treated as available
     appointment.status = "rejected";
     appointment.statusUpdatedAt = new Date();
+    appointment.rejectedAt = new Date();
     await appointment.save();
+    
+    console.log(`Slot released: ${appointment.timeSlot} on ${appointment.date} is now available for booking again`);
 
             // Send notification for appointment rejection
         try {

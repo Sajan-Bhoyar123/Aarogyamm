@@ -547,7 +547,7 @@ module.exports.bookAppointment = async (req, res, next) => {
       }
     }
 
-    // RACE CONDITION PROTECTION: Final check for concurrent bookings
+    // ENHANCED DOUBLE-BOOKING PREVENTION: Final check for concurrent bookings
     const concurrentCheck = await Appointment.findOne({
       doctorId,
       date: appointmentDateObj,
@@ -556,7 +556,12 @@ module.exports.bookAppointment = async (req, res, next) => {
     });
 
     if (concurrentCheck) {
-      req.flash("error", "This time slot was just reserved by another patient. Please refresh and choose a different time.");
+      // Check if this is the same patient trying to book again
+      if (concurrentCheck.patientId.toString() === patientId.toString()) {
+        req.flash("error", "You already have a booking for this time slot. Please check your appointments.");
+      } else {
+        req.flash("error", "This time slot was just reserved by another patient. Please refresh and choose a different time.");
+      }
       return res.redirect(`/patient/bookappointment/${doctorId}`);
     }
 
@@ -629,50 +634,83 @@ module.exports.getAvailableSlots = async (req, res, next) => {
     const allAppointments = await Appointment.find({
       doctorId,
       date: appointmentDate
-    });
+    }).populate('patientId', 'username');
 
     // Generate all possible slots
     const allSlots = generateAppointmentSlots(doctor, appointmentDate);
     
-    // Debug logging
-    console.log('Debug - Doctor availability slots:', doctor.availabilitySlots);
-    console.log('Debug - Generated slots for date:', appointmentDate, allSlots);
+    // Enhanced debug logging
+    console.log('=== SLOT AVAILABILITY DEBUG ===');
+    console.log('Doctor ID:', doctorId);
+    console.log('Selected Date:', appointmentDate);
+    console.log('All appointments found:', allAppointments.map(apt => ({
+      id: apt._id,
+      timeSlot: apt.timeSlot,
+      status: apt.status,
+      patientName: apt.patientId?.username || 'Unknown'
+    })));
+    console.log('Generated slots:', allSlots);
+    console.log('================================');
 
     // Create slots with status indicators for frontend - ONLY show available and reserved slots
     const { validateAppointmentTime } = require("../utils/availabilityUtils");
     const slotsWithStatus = allSlots.map(slot => {
       const slotTime = `${slot.startTime}-${slot.endTime}`;
       
-      // Find if this slot has any appointment
-      const existingAppointment = allAppointments.find(appointment => appointment.timeSlot === slotTime);
+      // CRITICAL FIX: Find ALL appointments for this slot, not just the first one
+      const allAppointmentsForSlot = allAppointments.filter(appointment => appointment.timeSlot === slotTime);
       
       let status = 'available';
       let disabled = false;
       let statusText = '';
       let shouldShow = true; // New flag to control visibility
       
-      if (existingAppointment) {
-        switch (existingAppointment.status) {
-          case 'pending':
+      // Enhanced debugging for slot matching
+      console.log(`Checking slot ${slotTime}:`, {
+        allAppointmentsForSlot: allAppointmentsForSlot.map(apt => ({
+          id: apt._id,
+          timeSlot: apt.timeSlot,
+          status: apt.status,
+          patientName: apt.patientId?.username
+        }))
+      });
+      
+      if (allAppointmentsForSlot.length > 0) {
+        // PRIORITY LOGIC: Check appointments in order of priority
+        // 1. Confirmed appointments (highest priority - hide slot)
+        // 2. Pending appointments (show as reserved or your_pending)
+        // 3. Rejected/cancelled appointments (lowest priority - show as available)
+        
+        const confirmedAppointment = allAppointmentsForSlot.find(apt => apt.status === 'confirmed');
+        const pendingAppointment = allAppointmentsForSlot.find(apt => apt.status === 'pending');
+        
+        if (confirmedAppointment) {
+          // CONFIRMED appointment takes precedence - HIDE the slot
+          console.log(`HIDING CONFIRMED SLOT: ${slotTime} - Patient: ${confirmedAppointment.patientId?.username}`);
+          shouldShow = false;
+          status = 'confirmed';
+          disabled = true;
+          statusText = ' ✅ Booked';
+        } else if (pendingAppointment) {
+          // PENDING appointment - show as reserved or your_pending
+          if (pendingAppointment.patientId && pendingAppointment.patientId._id.toString() === patientId.toString()) {
+            status = 'your_pending';
+            disabled = false;
+            statusText = ' ⏳ Your booking (Pending doctor approval)';
+            shouldShow = true;
+          } else {
             status = 'reserved';
             disabled = true;
-            statusText = ' - Reserved by other patient (Not Confirmed)';
-            shouldShow = true; // Show reserved slots
-            break;
-          case 'confirmed':
-            // HIDE confirmed slots completely from patient view
-            shouldShow = false;
-            break;
-          case 'rejected':
-          case 'cancelled':
-          case 'completed':
-            status = 'available';
-            disabled = false;
-            statusText = '';
+            statusText = ' 🔒 Reserved by other patient (Not Confirmed)';
             shouldShow = true;
-            break;
+          }
         }
+        // If only rejected/cancelled appointments exist, slot remains available (default values)
       }
+      
+      // Legacy single appointment handling (keeping for backward compatibility)
+      const existingAppointment = allAppointmentsForSlot[0]; // For logging purposes
+      
       
       // TIME BUFFER CHECK: Disable slots too close to current time for same-day bookings
       const timeValidation = validateAppointmentTimeWithBuffer(appointmentDate, slotTime);
@@ -691,6 +729,15 @@ module.exports.getAvailableSlots = async (req, res, next) => {
       };
     }).filter(slot => slot.shouldShow); // Only return slots that should be visible
 
+    // Enhanced debugging for final results
+    console.log('Final slots being returned:', slotsWithStatus.map(slot => ({
+      slotTime: slot.slotTime,
+      status: slot.status,
+      disabled: slot.disabled,
+      shouldShow: slot.shouldShow,
+      statusText: slot.statusText
+    })));
+
     // For backward compatibility, also provide availableSlots (only bookable ones)
     const availableSlots = slotsWithStatus.filter(slot => !slot.disabled);
 
@@ -700,7 +747,8 @@ module.exports.getAvailableSlots = async (req, res, next) => {
       allSlotsWithStatus: slotsWithStatus,
       availableSlots: availableSlots,
       totalSlots: allSlots.length,
-      bookedSlots: allAppointments.filter(apt => apt.status === 'pending' || apt.status === 'confirmed').length
+      bookedSlots: allAppointments.filter(apt => apt.status === 'pending' || apt.status === 'confirmed').length,
+      confirmedSlots: allAppointments.filter(apt => apt.status === 'confirmed').length
     });
 
   } catch (error) {

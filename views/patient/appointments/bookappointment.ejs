@@ -114,6 +114,10 @@
                 <input type="date" name="patient[appointmentDate]" id="appointmentDate" class="form-control" required 
                        min="<%= minBookingDate %>" max="<%= maxBookingDate %>">
                 <div class="invalid-feedback">Please select a valid date.</div>
+                <div id="dateWarning" class="alert alert-warning mt-2" style="display: none;">
+                    <strong>⚠️ Invalid Date Selected!</strong>
+                    <div id="dateWarningMessage"></div>
+                </div>
                 <small class="form-text text-muted">
                     You can book appointments from today up to 1 week in advance. 
                     Available time slots will update based on your selected date.
@@ -184,23 +188,46 @@
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
         
-        // Add client-side date validation
-        dateInput.addEventListener("input", function() {
-            const selectedDate = new Date(this.value);
+        // Add real-time date validation with immediate warnings
+        function validateSelectedDate() {
+            const selectedDate = new Date(dateInput.value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
             const oneWeekFromToday = new Date(today);
             oneWeekFromToday.setDate(today.getDate() + 7);
             
-            if (selectedDate < today) {
-                this.setCustomValidity("❌ You CANNOT book a PAST DATE! Please select today or a future date.");
-            } else if (selectedDate > oneWeekFromToday) {
-                this.setCustomValidity("❌ You CANNOT book a date MORE THAN 1 WEEK from today! Please select a date within the next 7 days.");
-            } else {
-                this.setCustomValidity("");
+            const dateWarning = document.getElementById("dateWarning");
+            const dateWarningMessage = document.getElementById("dateWarningMessage");
+            
+            if (!dateInput.value) {
+                dateWarning.style.display = "none";
+                dateInput.setCustomValidity("");
+                return true;
             }
-        });
+            
+            if (selectedDate < today) {
+                const daysDiff = Math.ceil((today - selectedDate) / (1000 * 60 * 60 * 24));
+                dateWarningMessage.innerHTML = `You selected a date that was <strong>${daysDiff} day(s) ago</strong>. Please select today or a future date.`;
+                dateWarning.style.display = "block";
+                dateInput.setCustomValidity("❌ You CANNOT book a PAST DATE! Please select today or a future date.");
+                return false;
+            } else if (selectedDate > oneWeekFromToday) {
+                const daysDiff = Math.ceil((selectedDate - oneWeekFromToday) / (1000 * 60 * 60 * 24));
+                dateWarningMessage.innerHTML = `You selected a date that is <strong>${daysDiff} day(s) beyond the 1-week limit</strong>. Please select a date within the next 7 days.`;
+                dateWarning.style.display = "block";
+                dateInput.setCustomValidity("❌ You CANNOT book a date MORE THAN 1 WEEK from today! Please select a date within the next 7 days.");
+                return false;
+            } else {
+                dateWarning.style.display = "none";
+                dateInput.setCustomValidity("");
+                return true;
+            }
+        }
+        
+        // Add event listeners for immediate validation
+        dateInput.addEventListener("input", validateSelectedDate);
+        dateInput.addEventListener("change", validateSelectedDate);
         
         // Update time slots when date changes
         dateInput.addEventListener("change", updateTimeSlots);
@@ -218,6 +245,15 @@
             if (!selectedDate) {
                 timeSlotSelect.innerHTML = '<option value="" selected disabled>Select a date first</option>';
                 return;
+            }
+            
+            // Check if the selected date is valid before loading slots
+            if (!validateSelectedDate()) {
+                timeSlotSelect.innerHTML = '<option value="" selected disabled>Please select a valid date first</option>';
+                timeSlotSelect.disabled = true;
+                return;
+            } else {
+                timeSlotSelect.disabled = false;
             }
             
             // Fetch slots with status from backend
@@ -251,6 +287,12 @@
                         if (slot.status === 'available' && !slot.disabled) {
                             displayText += ' ✅ Available';
                             option.style.color = '#28a745';
+                            option.style.fontWeight = 'bold';
+                        } else if (slot.status === 'your_pending') {
+                            displayText += slot.statusText;
+                            option.disabled = true;
+                            option.style.backgroundColor = '#d1ecf1';
+                            option.style.color = '#0c5460';
                             option.style.fontWeight = 'bold';
                         } else if (slot.status === 'reserved') {
                             displayText += slot.statusText;

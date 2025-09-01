@@ -109,6 +109,35 @@ class NotificationTemplates {
                 </div>
             ` + footerStyle,
             
+            appointment_booked_doctor: baseStyle + headerStyle('#2196F3', 'New Appointment Request') + contentStyle + `
+                <h2 style="color: #2c3e50; margin-bottom: 20px;">Hello Dr. ${data.doctorName},</h2>
+                <p style="font-size: 16px; line-height: 1.6; color: #555;">You have received a new appointment request from <strong>${data.patientName}</strong>.</p>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2196F3;">
+                    <h3 style="color: #2c3e50; margin-top: 0;">📅 Appointment Request Details:</h3>
+                    <p><strong>Patient:</strong> ${data.patientName}</p>
+                    <p><strong>Date:</strong> ${data.formattedDate}</p>
+                    <p><strong>Time:</strong> ${data.timeSlot}</p>
+                    <p><strong>Reason:</strong> ${data.reason}</p>
+                    <p><strong>Status:</strong> <span style="color: #FF9800; font-weight: bold;">⏳ Awaiting Your Response</span></p>
+                </div>
+                
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 0; color: #1565c0;"><strong>📝 Action Required:</strong> Please review and confirm or reject this appointment request in your dashboard.</p>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/doctor/appointments" 
+                       style="background: #2196F3; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: 600; display: inline-block; transition: all 0.3s; margin-right: 10px;">
+                        📋 Review Appointments
+                    </a>
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/doctor/dashboard" 
+                       style="background: #4CAF50; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: 600; display: inline-block; transition: all 0.3s;">
+                        🏠 Go to Dashboard
+                    </a>
+                </div>
+            ` + footerStyle,
+            
             appointment_confirmed: baseStyle + headerStyle('#4CAF50', 'Appointment Confirmed! 🎉') + contentStyle + `
                 <h2 style="color: #2c3e50; margin-bottom: 20px;">Great news, ${data.patientName}!</h2>
                 <p style="font-size: 16px; line-height: 1.6; color: #555;">Dr. <strong>${data.doctorName}</strong> has confirmed your appointment.</p>
