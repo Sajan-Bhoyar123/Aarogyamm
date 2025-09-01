@@ -64,7 +64,7 @@
         <form id="appointmentForm" action="/patient/bookappointment" method="POST" enctype="application/x-www-form-urlencoded" class="needs-validation" novalidate>
             <div class="row">
                 <div class="col-md-6 mb-2">
-                    <label class="form-label">First Name</label>
+                    <label class="form-label" >First Name</label>
                     <input type="text" name="patient[firstName]" class="form-control" required>
                     <div class="invalid-feedback">First name is required.</div>
                 </div>
@@ -90,14 +90,14 @@
         
                 <div class="col-md-6 mb-2">
                     <label class="form-label">Mobile</label>
-                    <input type="text" name="patient[mobile]" class="form-control" required pattern="^\d{10}$">
+                    <input type="text" name="patient[mobile]" class="form-control" value="<%=patient.phone%>" required pattern="^\d{10}$">
                     <div class="invalid-feedback">Enter a valid 10-digit mobile number.</div>
                 </div>
             </div>
         
             <div class="mb-2">
                 <label class="form-label">Email</label>
-                <input type="email" name="patient[email]" class="form-control" required>
+                <input type="email" name="patient[email]" class="form-control" value="<%=patient.email%>" required>
                 <div class="invalid-feedback">Please enter a valid email.</div>
             </div>
         
@@ -157,7 +157,7 @@
 <!-- Enhanced Dynamic Time Slot Update Script with AM/PM Format -->
 <script>
     // Doctor availability data from the server
-    const doctorAvailability = <%- JSON.stringify(doctor.availabilitySlots || []) %>;
+    const doctorAvailability = JSON.parse('<%-JSON.stringify(doctor.availabilitySlots || [])%>');
     
     // Function to convert 24-hour time to 12-hour AM/PM format
     function convertTo12Hour(time24) {
@@ -209,78 +209,95 @@
         updateTimeSlots();
         
         function updateTimeSlots() {
-            const selectedDate = new Date(dateInput.value);
-            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const dayOfWeek = days[selectedDate.getDay()];
+            const selectedDate = dateInput.value;
+            const doctorId = '<%= doctor._id %>';
             
             // Clear existing options
-            timeSlotSelect.innerHTML = '<option value="" selected disabled>Select a time slot</option>';
+            timeSlotSelect.innerHTML = '<option value="" selected disabled>Loading slots...</option>';
             
-            if (!doctorAvailability || doctorAvailability.length === 0) {
-                timeSlotSelect.innerHTML = '<option value="" disabled>Doctor has not set availability yet</option>';
+            if (!selectedDate) {
+                timeSlotSelect.innerHTML = '<option value="" selected disabled>Select a date first</option>';
                 return;
             }
             
-            // Filter slots for the selected day
-            var daySlots = [];
-            for (var i = 0; i < doctorAvailability.length; i++) {
-                if (doctorAvailability[i].day === dayOfWeek) {
-                    daySlots.push(doctorAvailability[i]);
-                }
-            }
-            
-            if (daySlots.length === 0) {
-                timeSlotSelect.innerHTML = '<option value="" disabled>No available slots for ' + dayOfWeek + '</option>';
-                return;
-            }
-            
-            // Add available slots with AM/PM format and 30-minute buffer check
-            for (var j = 0; j < daySlots.length; j++) {
-                var slot = daySlots[j];
-                var option = document.createElement('option');
-                
-                // Keep the original 24-hour format for the value (for backend processing)
-                option.value = slot.startTime + '-' + slot.endTime;
-                
-                // Convert times to AM/PM format for display
-                var startTimeAMPM = convertTo12Hour(slot.startTime);
-                var endTimeAMPM = convertTo12Hour(slot.endTime);
-                
-                // Check if this is a same-day booking
-                var today = new Date();
-                today.setHours(0, 0, 0, 0);
-                var selectedDateOnly = new Date(selectedDate);
-                selectedDateOnly.setHours(0, 0, 0, 0);
-                var isToday = selectedDateOnly.getTime() === today.getTime();
-                
-                if (isToday) {
-                    // For same-day bookings, check 30-minute buffer
-                    var startTimeParts = slot.startTime.split(':');
-                    var hours = parseInt(startTimeParts[0]);
-                    var minutes = parseInt(startTimeParts[1]);
+            // Fetch slots with status from backend
+            fetch(`/patient/available-slots/${doctorId}/${selectedDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    timeSlotSelect.innerHTML = '<option value="" selected disabled>Select a time slot</option>';
                     
-                    var appointmentDateTime = new Date();
-                    appointmentDateTime.setHours(hours, minutes, 0, 0);
-                    
-                    var now = new Date();
-                    var timeDifferenceMs = appointmentDateTime.getTime() - now.getTime();
-                    var timeDifferenceMinutes = Math.floor(timeDifferenceMs / (1000 * 60));
-                    
-                    if (timeDifferenceMinutes < 30) {
-                        option.disabled = true;
-                        option.style.backgroundColor = '#f8f9fa';
-                        option.style.color = '#6c757d';
-                        option.textContent = startTimeAMPM + ' - ' + endTimeAMPM + ' (Too soon - need 30 min buffer)';
-                    } else {
-                        option.textContent = startTimeAMPM + ' - ' + endTimeAMPM + ' (' + slot.slotDuration + ' min) ✅';
+                    if (!data.success) {
+                        timeSlotSelect.innerHTML = '<option value="" disabled>Error loading slots</option>';
+                        return;
                     }
-                } else {
-                    // For future dates, show normal AM/PM format
-                    option.textContent = startTimeAMPM + ' - ' + endTimeAMPM + ' (' + slot.slotDuration + ' min)';
-                }
-                
-                timeSlotSelect.appendChild(option);
-            }
+                    
+                    if (!data.allSlotsWithStatus || data.allSlotsWithStatus.length === 0) {
+                        timeSlotSelect.innerHTML = '<option value="" disabled>No slots available for this date</option>';
+                        return;
+                    }
+                    
+                    // Add all slots with proper status indicators
+                    data.allSlotsWithStatus.forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot.slotTime;
+                        
+                        // Convert times to AM/PM format for display
+                        const startTimeAMPM = convertTo12Hour(slot.startTime);
+                        const endTimeAMPM = convertTo12Hour(slot.endTime);
+                        
+                        // Set option text based on status
+                        let displayText = `${startTimeAMPM} - ${endTimeAMPM}`;
+                        
+                        if (slot.status === 'available' && !slot.disabled) {
+                            displayText += ' ✅ Available';
+                            option.style.color = '#28a745';
+                            option.style.fontWeight = 'bold';
+                        } else if (slot.status === 'reserved') {
+                            displayText += slot.statusText;
+                            option.disabled = true;
+                            option.style.backgroundColor = '#fff3cd';
+                            option.style.color = '#856404';
+                            option.style.fontStyle = 'italic';
+                        } else if (slot.disabled) {
+                            displayText += slot.statusText;
+                            option.disabled = true;
+                            option.style.backgroundColor = '#f8f9fa';
+                            option.style.color = '#6c757d';
+                        }
+                        
+                        option.textContent = displayText;
+                        timeSlotSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching slots:', error);
+                    timeSlotSelect.innerHTML = '<option value="" disabled>Error loading slots - check console</option>';
+                    
+                    // Fallback: Show doctor availability slots if API fails
+                    if (doctorAvailability && doctorAvailability.length > 0) {
+                        const selectedDateObj = new Date(selectedDate);
+                        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        const dayOfWeek = days[selectedDateObj.getDay()];
+                        
+                        // Filter slots for the selected day
+                        const daySlots = doctorAvailability.filter(slot => slot.day === dayOfWeek && slot.isAvailable);
+                        
+                        if (daySlots.length > 0) {
+                            timeSlotSelect.innerHTML = '<option value="" selected disabled>Select a time slot</option>';
+                            
+                            daySlots.forEach(slot => {
+                                const option = document.createElement('option');
+                                option.value = `${slot.startTime}-${slot.endTime}`;
+                                
+                                const startTimeAMPM = convertTo12Hour(slot.startTime);
+                                const endTimeAMPM = convertTo12Hour(slot.endTime);
+                                option.textContent = `${startTimeAMPM} - ${endTimeAMPM} (${slot.slotDuration} min)`;
+                                
+                                timeSlotSelect.appendChild(option);
+                            });
+                        }
+                    }
+                });
         }
     });
 </script>

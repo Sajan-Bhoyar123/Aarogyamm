@@ -24,7 +24,6 @@
   .status-rejected { color: #dc3545; font-weight: bold; }
   .status-completed { color: #17a2b8; font-weight: bold; }
   .status-cancelled { color: #6c757d; font-weight: bold; }
-  .status-patient_not_come { color: #fd7e14; font-weight: bold; }
 
   .filter-container {
     background-color: #ffffff;
@@ -55,7 +54,7 @@
 </style>
 
 <div class="appointments-container container table-responsive">
-  <h2>All Appointments</h2>
+  <h2>Today's Appointments</h2>
   
   <!-- Search and Filter Section -->
   <div class="filter-container">
@@ -75,7 +74,6 @@
             <option value="rejected">Rejected</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
-            <option value="patient_not_come">Patient Not Come</option>
           </select>
         </div>
         <div class="col-md-2">
@@ -118,7 +116,7 @@
     <tbody>
       <% if (appointments.length === 0) { %>
         <tr>
-          <td colspan="8">No appointments found.</td>
+          <td colspan="8">No appointments found for today.</td>
         </tr>
       <% } else { %>
         <% appointments.forEach((appointment, idx) => { %>
@@ -143,33 +141,23 @@
                 <% } else if (appointment.status === 'pending' && !canDoctorAcceptReject(appointment)) { %>
                   <!-- Appointment time has passed but still pending -->
                   <span class="text-muted">Time expired - cannot accept/reject</span>
-                <% } else if (appointment.status === 'confirmed' && hasAppointmentTimeStarted(appointment.date, appointment.timeSlot)) { %>
-                  <!-- After appointment time starts: Show Patient Not Come and Complete buttons FIRST -->
-                  <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#patientNotComeModal" onclick="setAppointmentId('<%= appointment._id %>', 'patient-not-come')">
-                    <i class="fa-solid fa-user-xmark"></i> Patient Not Come
-                  </button>
-                  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#completeModal" onclick="setAppointmentId('<%= appointment._id %>', 'complete')">
-                    <i class="fa-solid fa-check-circle"></i> Complete
-                  </button>
-                <% } else if (appointment.status === 'confirmed' && !hasAppointmentTimeStarted(appointment.date, appointment.timeSlot)) { %>
-                  <!-- Confirmed but appointment time hasn't started yet -->
-                  <span class="text-muted">Appointment time hasn't started yet</span>
+                <% } else if (appointment.status === 'confirmed' && canDoctorAddReports(appointment)) { %>
+                  <!-- After appointment time and confirmed: Show add/edit buttons -->
+                  <a href="/doctor/appointments/addAppointmentDetails/<%= appointment._id %>" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i> Add Details
+                  </a>
+                  <a href="/doctor/appointments/edit/<%= appointment._id %>" class="btn btn-secondary">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </a>
+                <% } else if (appointment.status === 'confirmed' && !canDoctorAddReports(appointment)) { %>
+                  <!-- Confirmed but appointment time hasn't passed yet -->
+                  <span class="text-muted">Appointment time hasn't passed yet</span>
                 <% } else if (appointment.status === 'rejected') { %>
                   <span class="text-muted">No actions available</span>
                 <% } else if (appointment.status === 'completed') { %>
-                  <% if (!appointment.disease || !appointment.summary) { %>
-                    <!-- Show Add Details if no medical details added yet -->
-                    <a href="/doctor/appointments/addAppointmentDetails/<%= appointment._id %>" class="btn btn-primary">
-                      <i class="fa-solid fa-plus"></i> Add Details
-                    </a>
-                  <% } else { %>
-                    <!-- Show only Edit if details already added -->
-                    <a href="/doctor/appointments/edit/<%= appointment._id %>" class="btn btn-secondary">
-                      <i class="fa-solid fa-pen-to-square"></i> Edit Details
-                    </a>
-                  <% } %>
-                <% } else if (appointment.status === 'patient_not_come') { %>
-                  <span class="text-muted">Patient did not show up</span>
+                  <a href="/doctor/appointments/edit/<%= appointment._id %>" class="btn btn-secondary">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </a>
                 <% } %>
               </div>      
             </td>
@@ -222,58 +210,12 @@
   </div>
 </div>
 
-<!-- Patient Not Come Modal -->
-<div class="modal fade" id="patientNotComeModal" tabindex="-1" aria-labelledby="patientNotComeModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="patientNotComeModalLabel">Mark Patient Not Come</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to mark this appointment as "Patient Not Come"? This will update the appointment status and notify the patient.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form id="patientNotComeForm" method="POST">
-          <button type="submit" class="btn btn-warning">Yes, Patient Not Come</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Complete Appointment Modal -->
-<div class="modal fade" id="completeModal" tabindex="-1" aria-labelledby="completeModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="completeModalLabel">Complete Appointment</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to mark this appointment as completed? You will be redirected to add prescription, medical reports, and billing details.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <form id="completeForm" method="POST">
-          <button type="submit" class="btn btn-success">Yes, Complete Appointment</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
   function setAppointmentId(appointmentId, action) {
     if (action === 'confirm') {
       document.getElementById("confirmForm").action = `/doctor/appointments/confirm/${appointmentId}`;
     } else if (action === 'reject') {
       document.getElementById("rejectForm").action = `/doctor/appointments/reject/${appointmentId}`;
-    } else if (action === 'patient-not-come') {
-      document.getElementById("patientNotComeForm").action = `/doctor/appointments/patient-not-come/${appointmentId}`;
-    } else if (action === 'complete') {
-      document.getElementById("completeForm").action = `/doctor/appointments/complete/${appointmentId}`;
     }
   }
 </script>

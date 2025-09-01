@@ -26,6 +26,8 @@ const fs = require('fs');
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const ExpressError = require("./utils/ExpressError");
+const notificationService = require("./utils/notificationService");
+const schedulerService = require("./utils/scheduler");
 
 const app = express();
 
@@ -261,6 +263,12 @@ app.use("/header",HeaderRoute);
 const SearchRoute = require("./routes/search.js");
 app.use("/city",SearchRoute);
 
+// Notification System Integration
+const notificationRoutes = require('./routes/notifications');
+app.use('/api/notifications', notificationRoutes);
+
+// Notification scheduler already imported above
+
 app.post('/create-order', async (req, res) => {
   try {
     const { amount } = req.body;
@@ -301,6 +309,34 @@ app.post('/verify-payment/:billingId', async (req, res) => {
 
       billing.status = 'paid';
       await billing.save();
+
+      // Send payment confirmation notifications
+      try {
+          // Get patient, doctor, and appointment details for proper notification
+          const patient = await Patient.findById(billing.patientId);
+          const doctor = await Doctor.findById(billing.doctorId);
+          
+          const result = await notificationService.sendPaymentConfirmationNotifications(
+              billing._id,
+              billing.patientId,
+              billing.doctorId,
+              {
+                  transactionId: razorpay_payment_id,
+                  amount: billing.amount,
+                  date: new Date(),
+                  doctorName: doctor ? doctor.username : 'Doctor',
+                  patientName: patient ? patient.username : 'Patient',
+                  appointmentDate: billing.appointmentDate,
+                  timeSlot: billing.timeSlot,
+                  invoiceNo: billing.invoiceNo,
+                  reason: billing.reason
+              }
+          );
+          console.log('Payment confirmation notifications sent:', result);
+      } catch (notificationError) {
+          console.error('Error sending payment notifications:', notificationError);
+          // Don't fail the payment if notifications fail
+      }
 
       return res.json({ success: true });
     } catch (err) {
@@ -352,6 +388,10 @@ app.use((err, req, res, next) => {
 });
 
 
+
+// Start notification scheduler
+schedulerService.startAllJobs();
+console.log('Notification scheduler started successfully');
 
 const PORT =  3000;
 app.listen(PORT, () => {

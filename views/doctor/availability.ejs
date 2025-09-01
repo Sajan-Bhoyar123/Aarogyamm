@@ -78,6 +78,64 @@
         position: relative;
     }
 
+    .time-slot.booked {
+        background: #fff3cd;
+        border-color: #ffeaa7;
+    }
+
+    .time-slot.confirmed {
+        background: #d1ecf1;
+        border-color: #bee5eb;
+    }
+
+    .slot-status {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        font-weight: 500;
+        margin-left: 5px;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-confirmed {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-cancelled {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .time-slot.expired {
+        background: #f8f9fa;
+        border-color: #dee2e6;
+        opacity: 0.6;
+    }
+
+    .time-slot.expired .time-range {
+        color: #6c757d;
+    }
+
+    .time-slot.expired .slot-status {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+
     .time-slot-header {
         display: flex;
         justify-content: space-between;
@@ -240,11 +298,52 @@
                     <div class="time-slots" id="slots-<%= day.toLowerCase() %>">
                         <% if (daySlots.length > 0) { %>
                             <% daySlots.forEach((slot, index) => { %>
-                                <div class="time-slot" data-day="<%= day %>" data-index="<%= index %>">
+                                <% 
+                                    const slotTime = `${slot.startTime}-${slot.endTime}`;
+                                    const dayBookings = bookedSlots[day] && bookedSlots[day][slotTime] ? bookedSlots[day][slotTime] : [];
+                                    // Only show pending and confirmed appointments
+                                    const activeBookings = dayBookings.filter(booking => booking.status === 'confirmed' || booking.status === 'pending');
+                                    const hasActiveBookings = activeBookings.length > 0;
+                                    const confirmedBookings = activeBookings.filter(booking => booking.status === 'confirmed');
+                                    const pendingBookings = activeBookings.filter(booking => booking.status === 'pending');
+                                    
+                                    // Check if slot time has passed for today
+                                    const now = new Date();
+                                    const today = now.toLocaleDateString('en-US', { weekday: 'long' });
+                                    const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+                                    
+                                    // Parse slot end time to minutes
+                                    const [endHour, endMinute] = slot.endTime.split(':').map(Number);
+                                    const slotEndTime = endHour * 60 + endMinute;
+                                    
+                                    // Check if this slot has expired (only for today's slots)
+                                    const isExpired = (day === today && currentTime > slotEndTime);
+                                    
+                                    let slotClass = '';
+                                    if (isExpired) {
+                                        slotClass = 'expired';
+                                    } else if (confirmedBookings.length > 0) {
+                                        slotClass = 'confirmed';
+                                    } else if (pendingBookings.length > 0) {
+                                        slotClass = 'booked';
+                                    }
+                                %>
+                                <div class="time-slot <%= slotClass %>" data-day="<%= day %>" data-index="<%= index %>">
                                     <div class="time-slot-header">
                                         <span class="time-range">
                                             <%= formatTime12Hour(slot.startTime) %> - <%= formatTime12Hour(slot.endTime) %>
                                             <small style="color: #6c757d;">(<%= slot.startTime %> - <%= slot.endTime %>)</small>
+                                            <% if (isExpired) { %>
+                                                <span class="slot-status" style="background: #e9ecef; color: #6c757d;">EXPIRED</span>
+                                            <% } else if (hasActiveBookings) { %>
+                                                <% activeBookings.forEach(booking => { %>
+                                                    <span class="slot-status status-<%= booking.status %>">
+                                                        <%= booking.status.toUpperCase() %> - <%= booking.patientName %>
+                                                    </span>
+                                                <% }); %>
+                                            <% } else { %>
+                                                <span class="slot-status" style="background: #d4edda; color: #155724;">FREE</span>
+                                            <% } %>
                                         </span>
                                         <span class="slot-duration"><%= slot.slotDuration %> min</span>
                                         <button type="button" class="remove-slot-btn" onclick="removeSlot('<%= day %>', <%= index %>)">×</button>

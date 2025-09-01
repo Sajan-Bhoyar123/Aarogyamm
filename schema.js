@@ -10,8 +10,8 @@ module.exports.appointmentSchema = Joi.object({
       }),
       email: Joi.string().email().required(),
       doctorId: Joi.string().required(), // could validate as an ObjectId if needed
-      // Allow booking for today or future dates
-      appointmentDate: Joi.date().min('now').required().messages({
+      // Allow booking for today or future dates - use start of today instead of 'now'
+      appointmentDate: Joi.date().min(new Date().setHours(0,0,0,0)).required().messages({
         'date.min': 'Appointment date must be today or in the future.'
       }),
       // Accept any HH:MM-HH:MM format to support dynamic slots from doctor's availability

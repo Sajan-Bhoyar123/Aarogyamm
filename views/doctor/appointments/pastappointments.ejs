@@ -1,0 +1,147 @@
+<%- layout("./layouts/doctorboilerplate") %>
+
+<style>
+  .appointments-container {
+    padding: 0px 20px;
+  }
+  .appointments-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  .appointments-table th, .appointments-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+  }
+  .appointments-table th {
+    background-color: #f8f9fa;
+  }
+  .actions .btn {
+    margin-right: 5px;
+  }
+  .status-pending { color: #ffc107; font-weight: bold; }
+  .status-confirmed { color: #28a745; font-weight: bold; }
+  .status-rejected { color: #dc3545; font-weight: bold; }
+  .status-completed { color: #17a2b8; font-weight: bold; }
+  .status-cancelled { color: #6c757d; font-weight: bold; }
+
+  .filter-container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .filter-container .form-control,
+  .filter-container .btn {
+    border-radius: 8px;
+  }
+
+  .filter-container .row {
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    .filter-container .col-md-3,
+    .filter-container .col-md-2 {
+      flex: 1 1 100%;
+      margin-bottom: 10px;
+    }
+  }
+</style>
+
+<div class="appointments-container container table-responsive">
+  <h2>Past Appointments</h2>
+  
+  <!-- Search and Filter Section -->
+  <div class="filter-container">
+    <form id="filterForm" method="GET" action="/doctor/filterdoctorappointments">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="search" placeholder="Search by Patient, Reason, Disease">
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control" name="date">
+        </div>
+        <div class="col-md-2">
+          <select class="form-control" name="status">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="rejected">Rejected</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-control" name="timeSlot">
+            <option value="">All Time Slots</option>
+            <option value="09:00-09:30">09:00 - 09:30 AM</option>
+            <option value="09:30-10:00">09:30 - 10:00 AM</option>
+            <option value="10:00-10:30">10:00 - 10:30 AM</option>
+            <option value="10:30-11:00">10:30 - 11:00 AM</option>
+            <option value="11:00-11:30">11:00 - 11:30 AM</option>
+            <option value="11:30-12:00">11:30 - 12:00 PM</option>
+            <option value="14:00-14:30">02:00 - 02:30 PM</option>
+            <option value="14:30-15:00">02:30 - 03:00 PM</option>
+            <option value="15:00-15:30">03:00 - 03:30 PM</option>
+            <option value="15:30-16:00">03:30 - 04:00 PM</option>
+            <option value="16:00-16:30">04:00 - 04:30 PM</option>
+            <option value="16:30-17:00">04:30 - 05:00 PM</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <table class="appointments-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Patient Name</th>
+        <th>Appointment Date</th>
+        <th>Time Slot</th>
+        <th>Gender</th>
+        <th>Disease</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if (appointments.length === 0) { %>
+        <tr>
+          <td colspan="8">No past appointments found.</td>
+        </tr>
+      <% } else { %>
+        <% appointments.forEach((appointment, idx) => { %>
+          <tr>
+            <td><%= idx+1 %></td>
+            <td><%= appointment.patientId ? appointment.patientId.username : "N/A" %></td>
+            <td><%= new Date(appointment.date).toLocaleDateString() %></td>
+            <td><%= appointment.timeSlot %></td>
+            <td><%= appointment.patientId ? appointment.patientId.gender : "N/A" %></td>
+            <td><%= appointment.disease || "N/A" %></td>
+            <td class="status-<%= appointment.status %>"><%= appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1) %></td>
+            <td class="actions">
+              <div class="d-flex">
+                <% if (appointment.status === 'completed') { %>
+                  <a href="/doctor/appointments/edit/<%= appointment._id %>" class="btn btn-secondary">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </a>
+                <% } else { %>
+                  <span class="text-muted">No actions available</span>
+                <% } %>
+              </div>      
+            </td>
+          </tr>
+        <% }) %>
+      <% } %>
+    </tbody>
+  </table>
+</div>

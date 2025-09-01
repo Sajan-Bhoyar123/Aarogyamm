@@ -24,6 +24,10 @@ const patientSchema = new Schema ({
     bloodType: {
         type: String,
     },
+    phone: {
+        type: String,
+        required: true
+    },
     role: {
         type: String,
         enum: ['admin', 'doctor', 'patient'],

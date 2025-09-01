@@ -6,6 +6,7 @@ const Patient = require("../models/patient");
 const ExpressError = require("../utils/ExpressError");
 const { patientSchema, doctorSchema } = require("../schema");
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
+const notificationService = require("../utils/notificationService");
 const mapToken= process.env.MAP_TOKEN;
 const geocodingClient = mbxGeocoding({ accessToken: mapToken });
 /**
@@ -122,6 +123,21 @@ module.exports.doctorSignedUp = async (req, res, next) => {
 
     await Doctor.register(newDoctor, password);
 
+    // Send welcome notifications
+    try {
+        await notificationService.sendWelcomeNotifications(
+            newDoctor._id,
+            'Doctor',
+            newDoctor.email,
+            newDoctor.phone,
+            newDoctor.username
+        );
+        console.log('Welcome notifications sent to doctor successfully');
+    } catch (notificationError) {
+        console.error('Error sending welcome notifications to doctor:', notificationError);
+        // Don't fail signup if notifications fail
+    }
+
     // Auto-login after signup
     req.login(newDoctor, async (err) => {
       if (err) {
@@ -150,14 +166,29 @@ module.exports.doctorSignedUp = async (req, res, next) => {
 module.exports.patientSignedUp = async (req, res, next) => {
   try {
 
-    const { username, email, password, gender, age, height, weight, bloodType } = req.body;
+    const { username, email, password, gender, age, height, weight, bloodType, phone } = req.body;
     // Create new Patient instance
-    const newPatient = new Patient({ username, email, gender, age, height, weight, bloodType });
+    const newPatient = new Patient({ username, email, gender, age, height, weight, bloodType, phone });
     let filename = req.file.filename;
     let url = req.file.path;
     newPatient.profile = {filename,url};
     // Register patient with hashed password
     const registeredPatient = await Patient.register(newPatient, password);
+
+    // Send welcome notifications
+    try {
+        await notificationService.sendWelcomeNotifications(
+            registeredPatient._id,
+            'Patient',
+            registeredPatient.email,
+            registeredPatient.phone,
+            registeredPatient.username
+        );
+        console.log('Welcome notifications sent to patient successfully');
+    } catch (notificationError) {
+        console.error('Error sending welcome notifications to patient:', notificationError);
+        // Don't fail signup if notifications fail
+    }
 
     // Auto-login after signup
     req.login(registeredPatient, (err) => {

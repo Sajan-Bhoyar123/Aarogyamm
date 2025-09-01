@@ -162,7 +162,11 @@
                     </div>
                     <div class="actions">
                         <strong>Action</strong> <br>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setAppointmentId('<%= appointment._id %>')">Cancel</button>                                      
+                        <% if (appointment.status !== 'confirmed') { %>
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" onclick="setAppointmentId('<%= appointment._id %>')">Cancel</button>
+                        <% } else { %>
+                            <small class="text-muted">Cannot cancel confirmed appointment</small>
+                        <% } %>                                      
                     </div>
                 </div>
             <% }) %>

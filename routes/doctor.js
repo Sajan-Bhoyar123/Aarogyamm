@@ -13,6 +13,11 @@ const upload = multer({ storage });
 router.get("/dashboard", doctorController.dashboard);
 router.get("/availability", doctorController.availability);
 router.get("/appointments", doctorController.appointments);
+router.get("/pastappointments", doctorController.pastAppointments);
+router.get("/todaysappointments", doctorController.todaysAppointments);
+router.get("/upcomingappointments", doctorController.upcomingAppointments);
+router.get("/filterdoctorappointments", doctorController.filterDoctorAppointments);
+router.get("/api/appointment-counts", doctorController.getFilteredAppointmentCounts);
 router.get("/patients", doctorController.patients);
 router.get("/patient/:id/healthrecords", doctorController.healthRecords);
 router.get("/:doctorId/patient/:patientId/prescriptions", doctorController.prescriptions);
@@ -50,6 +55,8 @@ router
 router.post("/generate-certificate/:patientId", doctorController.generateCertificate);
 router.post("/appointments/confirm/:id", doctorController.confirmAppointment);
 router.post("/appointments/reject/:id", doctorController.rejectAppointment);
+router.post("/appointments/patient-not-come/:id", doctorController.markPatientNotCome);
+router.post("/appointments/complete/:id", doctorController.completeAppointment);
 
 // Chat routes
 router.get("/chat", async (req, res) => {

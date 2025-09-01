@@ -12,6 +12,11 @@ const billingSchema = new Schema({
         ref: "Doctor",
         required: true
     },
+    appointmentId: {
+        type: Schema.Types.ObjectId,
+        ref: "Appointment",
+        required: false // Optional for backward compatibility
+    },
     invoiceNo: {
         type: String,
         required: true,
@@ -21,6 +26,14 @@ const billingSchema = new Schema({
         type: Date,
         required: true,
         default: Date.now
+    },
+    appointmentDate: {
+        type: Date,
+        required: false // Store the actual appointment date
+    },
+    timeSlot: {
+        type: String,
+        required: false // Store the appointment time slot
     },
     amount: {
         type: Number,

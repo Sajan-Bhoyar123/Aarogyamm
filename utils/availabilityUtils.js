@@ -141,12 +141,12 @@ function isAppointmentTimePassed(appointmentDate, timeSlot) {
 }
 
 /**
- * Check if doctor can add medical reports (appointment must be confirmed and time must have passed)
+ * Check if doctor can add medical reports (appointment must be completed)
  * @param {Object} appointment - The appointment object
  * @returns {boolean} - True if doctor can add reports
  */
 function canDoctorAddReports(appointment) {
-    return appointment.status === 'confirmed' && isAppointmentTimePassed(appointment.date, appointment.timeSlot);
+    return appointment.status === 'completed';
 }
 
 /**
@@ -156,6 +156,61 @@ function canDoctorAddReports(appointment) {
  */
 function canDoctorAcceptReject(appointment) {
     return appointment.status === 'pending' && !isAppointmentTimePassed(appointment.date, appointment.timeSlot);
+}
+
+/**
+ * Check if appointment time has started (current time is at or after appointment start time)
+ * @param {Date} appointmentDate - The appointment date
+ * @param {string} timeSlot - The time slot (e.g., "22:00-22:30")
+ * @returns {boolean} - True if appointment time has started
+ */
+function hasAppointmentTimeStarted(appointmentDate, timeSlot) {
+    const now = new Date();
+    const appointmentDateTime = new Date(appointmentDate);
+    
+    // Extract start time from timeSlot (e.g., "22:00-22:30" -> "22:00")
+    const startTime = timeSlot.split('-')[0];
+    const [hours, minutes] = startTime.split(':').map(Number);
+    
+    // Set the appointment start time
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
+    
+    // Debug logging
+    console.log('hasAppointmentTimeStarted debug:', {
+        now: now.toLocaleString(),
+        appointmentDateTime: appointmentDateTime.toLocaleString(),
+        timeSlot: timeSlot,
+        startTime: startTime,
+        result: now >= appointmentDateTime
+    });
+    
+    return now >= appointmentDateTime;
+}
+
+/**
+ * Check if doctor can manage appointment during appointment time (mark as complete or patient not come)
+ * @param {Object} appointment - The appointment object
+ * @returns {boolean} - True if doctor can manage appointment during its time
+ */
+function canDoctorManageAppointmentDuringTime(appointment) {
+    // Show Patient Not Come/Complete options if:
+    // 1. Appointment is confirmed
+    // 2. Appointment time has started (current time >= start time)
+    // 3. Status is still 'confirmed' (not yet completed or marked as patient_not_come)
+    const result = appointment.status === 'confirmed' && 
+                   hasAppointmentTimeStarted(appointment.date, appointment.timeSlot);
+    
+    // Debug logging
+    console.log('canDoctorManageAppointmentDuringTime debug:', {
+        appointmentId: appointment._id,
+        status: appointment.status,
+        timeSlot: appointment.timeSlot,
+        date: appointment.date,
+        hasStarted: hasAppointmentTimeStarted(appointment.date, appointment.timeSlot),
+        result: result
+    });
+    
+    return result;
 }
 
 /**
@@ -195,12 +250,35 @@ async function autoRejectExpiredAppointments(appointments) {
  */
 function validateAppointmentDate(appointmentDate) {
     const now = new Date();
+    
+    // Create date objects using local timezone to avoid timezone parsing issues
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Start of today
     const oneWeekFromToday = new Date(today);
     oneWeekFromToday.setDate(today.getDate() + 7); // 7 days from today
     
-    // Reset time to start of day for comparison
-    const appointmentDateOnly = new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), appointmentDate.getDate());
+    // Handle both Date objects and date strings properly
+    let appointmentDateOnly;
+    if (typeof appointmentDate === 'string') {
+        // For date strings like "2025-09-01", parse them in local timezone
+        const dateParts = appointmentDate.split('-');
+        if (dateParts.length === 3) {
+            appointmentDateOnly = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+        } else {
+            appointmentDateOnly = new Date(appointmentDate);
+        }
+    } else {
+        // For Date objects, reset time to start of day for comparison
+        appointmentDateOnly = new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), appointmentDate.getDate());
+    }
+    
+    // Debug logging to help troubleshoot
+    console.log('Date validation debug:', {
+        today: today.toDateString(),
+        appointmentDateOnly: appointmentDateOnly.toDateString(),
+        todayTime: today.getTime(),
+        appointmentTime: appointmentDateOnly.getTime(),
+        comparison: appointmentDateOnly.getTime() - today.getTime()
+    });
     
     if (appointmentDateOnly < today) {
         return {
@@ -348,7 +426,9 @@ module.exports = {
     validateAppointmentTime,
     getMaxBookingDate,
     getMinBookingDate,
-    validateAppointmentTimeWithBuffer
+    validateAppointmentTimeWithBuffer,
+    hasAppointmentTimeStarted,
+    canDoctorManageAppointmentDuringTime
 };
 
 

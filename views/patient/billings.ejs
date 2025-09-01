@@ -70,13 +70,19 @@
                                 <% } %>
                             </td>
                             <td>
-                                <button 
-                                class="rzp-button btn btn-primary" 
-                                data-amount="<%= bill.amount %>" 
-                                data-billingid="<%= bill._id %>"
-                                >
-                                Pay ₹<%= bill.amount %>
-                                </button>                            
+                                <% if (bill.status === 'paid') { %>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Successful Payment Done
+                                    </span>
+                                <% } else { %>
+                                    <button 
+                                    class="rzp-button btn btn-primary" 
+                                    data-amount="<%= bill.amount %>" 
+                                    data-billingid="<%= bill._id %>"
+                                    >
+                                    Pay ₹<%= bill.amount %>
+                                    </button>
+                                <% } %>                            
                             </td>
                         </tr>
                     <% }); %>

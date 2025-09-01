@@ -11,6 +11,7 @@ const { generateAppointmentSlots } = require("../utils/availabilityUtils");
 const { validateAppointmentDate, validateAppointmentTime, validateAppointmentTimeWithBuffer } = require("../utils/availabilityUtils");
 const { appointmentSchema } = require('../schema');
 const ExpressError = require("../utils/ExpressError");
+const notificationService = require("../utils/notificationService");
 
 /**
  * Render the patient's dashboard.
@@ -157,6 +158,28 @@ module.exports.pastAppointments = async (req, res, next) => {
 module.exports.cancelAppointment = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const appointment = await Appointment.findById(id);
+    
+    if (!appointment) {
+      req.flash("error", "Appointment not found.");
+      const referer = req.get("referer") || "/patient/dashboard";
+      return res.redirect(referer);
+    }
+
+    // Send cancellation notifications before deleting
+    try {
+      await notificationService.sendAppointmentStatusNotifications(
+        appointment._id,
+        appointment.patientId,
+        appointment.doctorId,
+        'cancelled'
+      );
+      console.log('Appointment cancellation notification sent successfully');
+    } catch (notificationError) {
+      console.error('Error sending cancellation notification:', notificationError);
+      // Don't fail the cancellation if notifications fail
+    }
+
     await Appointment.findByIdAndDelete(id);
     req.flash("success", "Appointment canceled successfully!");
     // Determine the referer to redirect appropriately.
@@ -178,29 +201,82 @@ module.exports.filterAppointments = async (req, res, next) => {
     let patientId = req.user._id;
     const patient = await Patient.findById(patientId);
     const { search, date, status, timeSlot } = req.query;
-    let filter = {};
+    
+    // Base filter with patient ID
+    let filter = { patientId };
 
+    // Add specific filters
     if (date) filter.date = date;
     if (status) filter.status = status;
     if (timeSlot) filter.timeSlot = timeSlot;
 
-    let appointments = await Appointment.find(filter).populate("doctorId");
-
-    if (search) {
-      appointments = appointments.filter((appointment) =>
-        appointment.doctorId.username.toLowerCase().includes(search.toLowerCase()) ||
-        appointment.reason.toLowerCase().includes(search.toLowerCase()) ||
-        appointment.disease.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
+    // Determine which page we're filtering for based on referer
     const referer = req.get("referer");
+    let appointments;
+
     if (referer && referer.includes("/pastappointments")) {
-      return res.render("patient/appointments/pastappointments", { appointment,patient });
+      // Filter past appointments (before today)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filter.date = { ...filter.date, $lt: today };
+      
+      appointments = await Appointment.find(filter).populate("doctorId");
+      
+      // Apply search filter if provided
+      if (search) {
+        appointments = appointments.filter((appointment) =>
+          appointment.doctorId.username.toLowerCase().includes(search.toLowerCase()) ||
+          appointment.reason.toLowerCase().includes(search.toLowerCase()) ||
+          appointment.disease.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      return res.render("patient/appointments/pastappointments", { appointments, patient });
+      
     } else if (referer && referer.includes("/upcomingappointments")) {
-      return res.render("patient/appointments/upcomingappointments", { appointments,patient });
+      // Filter upcoming appointments (from tomorrow onwards)
+      const tomorrow = new Date();
+      tomorrow.setHours(0, 0, 0, 0); // Start of today
+      filter.date = { ...filter.date, $gte: tomorrow };
+      
+      appointments = await Appointment.find(filter).populate("doctorId");
+      
+      // Apply search filter if provided
+      if (search) {
+        appointments = appointments.filter((appointment) =>
+          appointment.doctorId.username.toLowerCase().includes(search.toLowerCase()) ||
+          appointment.reason.toLowerCase().includes(search.toLowerCase()) ||
+          appointment.disease.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      return res.render("patient/appointments/upcomingappointments", { appointments, patient });
+      
     } else {
-      return res.render("patient/appointments/todaysappointments", { appointments,patient });
+      // Filter today's appointments
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      filter.date = { 
+        ...filter.date, 
+        $gte: startOfDay, 
+        $lte: endOfDay 
+      };
+      
+      appointments = await Appointment.find(filter).populate("doctorId");
+      
+      // Apply search filter if provided
+      if (search) {
+        appointments = appointments.filter((appointment) =>
+          appointment.doctorId.username.toLowerCase().includes(search.toLowerCase()) ||
+          appointment.reason.toLowerCase().includes(search.toLowerCase()) ||
+          appointment.disease.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+      
+      return res.render("patient/appointments/todaysappointments", { appointments, patient });
     }
   } catch (error) {
     console.error("Error filtering appointments:", error);
@@ -257,7 +333,12 @@ module.exports.healthRecords = async (req, res, next) => {
 module.exports.prescriptions = async (req, res, next) => {
   try {
     const patientId = req.user._id;
-    const appointments = await Appointment.find({ patientId }).populate("doctorId");
+    // Only show appointments that have been completed and have attachments (prescriptions)
+    const appointments = await Appointment.find({ 
+      patientId,
+      status: 'completed',
+      attachments: { $exists: true, $ne: [] }
+    }).populate("doctorId");
      const patient = await Patient.findById(patientId);
     res.render("patient/prescriptions", { appointments,patient });
   } catch (err) {
@@ -303,8 +384,9 @@ module.exports.deletePrescription = async (req, res, next) => {
 module.exports.billings = async (req, res, next) => {
   try {
     const patientId = req.user._id;
+    // Get all billing records for completed appointments
     const bills = await Billing.find({ patientId }).populate("doctorId");
-     const patient = await Patient.findById(patientId);
+    const patient = await Patient.findById(patientId);
     res.render("patient/billings", { bills,patient,razorpayKeyId: process.env.RZP_KEY_ID });
   } catch (err) {
     console.error("Error fetching billings:", err);
@@ -392,7 +474,25 @@ module.exports.bookAppointment = async (req, res, next) => {
     }
 
     // Check if the requested time slot is available
-    const appointmentDateObj = new Date(appointmentDate);
+    // Parse date string properly to avoid timezone issues
+    let appointmentDateObj;
+    if (typeof appointmentDate === 'string') {
+        const dateParts = appointmentDate.split('-');
+        if (dateParts.length === 3) {
+            appointmentDateObj = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+        } else {
+            appointmentDateObj = new Date(appointmentDate);
+        }
+    } else {
+        appointmentDateObj = new Date(appointmentDate);
+    }
+    
+    // Debug logging
+    console.log('Appointment booking debug:', {
+        originalDate: appointmentDate,
+        parsedDate: appointmentDateObj.toDateString(),
+        currentTime: new Date().toLocaleString()
+    });
     
     // Validate appointment date (today to 1 week in advance)
     const { validateAppointmentDate, validateAppointmentTime } = require("../utils/availabilityUtils");
@@ -416,18 +516,48 @@ module.exports.bookAppointment = async (req, res, next) => {
       return res.redirect(`/patient/bookappointment/${doctorId}`);
     }
 
-    // Check if there are any existing appointments at the same time
+    // ENHANCED SLOT VALIDATION: Check slot status and prevent booking of reserved/confirmed slots
     const existingAppointment = await Appointment.findOne({
+      doctorId,
+      date: appointmentDateObj,
+      timeSlot
+    });
+
+    if (existingAppointment) {
+      let errorMessage = "";
+      switch (existingAppointment.status) {
+        case 'pending':
+          errorMessage = "This time slot is currently reserved by another patient and awaiting doctor confirmation. Please choose a different time.";
+          break;
+        case 'confirmed':
+          errorMessage = "This time slot is already confirmed and booked. Please choose a different time.";
+          break;
+        case 'rejected':
+        case 'cancelled':
+        case 'completed':
+          // These slots should be available, but double-check
+          break;
+        default:
+          errorMessage = "This time slot is not available. Please choose a different time.";
+      }
+      
+      if (errorMessage) {
+        req.flash("error", errorMessage);
+        return res.redirect(`/patient/bookappointment/${doctorId}`);
+      }
+    }
+
+    // RACE CONDITION PROTECTION: Final check for concurrent bookings
+    const concurrentCheck = await Appointment.findOne({
       doctorId,
       date: appointmentDateObj,
       timeSlot,
       status: { $in: ["pending", "confirmed"] }
     });
 
-    if (existingAppointment) {
-      req.flash("error", "This time slot is already booked. Please choose a different time.");
+    if (concurrentCheck) {
+      req.flash("error", "This time slot was just reserved by another patient. Please refresh and choose a different time.");
       return res.redirect(`/patient/bookappointment/${doctorId}`);
-       //return res.redirect(`/city/doctor/${doctorId}`);
     }
 
     const newAppointment = new Appointment({
@@ -449,7 +579,20 @@ module.exports.bookAppointment = async (req, res, next) => {
     await Doctor.findByIdAndUpdate(doctorId, { $push: { appointments: savedAppointment._id } });
     await Patient.findByIdAndUpdate(patientId, { $push: { appointments: savedAppointment._id } });
 
-    req.flash("success", "Appointment booked successfully!");
+    // Send notifications for appointment booking
+    try {
+        await notificationService.sendAppointmentBookingNotifications(
+            savedAppointment._id,
+            patientId,
+            doctorId
+        );
+        console.log('Appointment booking notifications sent successfully');
+    } catch (notificationError) {
+        console.error('Error sending appointment notifications:', notificationError);
+        // Don't fail the appointment booking if notifications fail
+    }
+
+    req.flash("success", "Appointment booked successfully! Your time slot is now reserved and waiting for doctor approval.");
     res.redirect("/patient/dashboard");
   } catch (error) {
     console.error("Error booking appointment:", error);
@@ -482,39 +625,82 @@ module.exports.getAvailableSlots = async (req, res, next) => {
       return res.status(400).json({ error: "Invalid date format" });
     }
 
-    // Get existing appointments for the date to filter out booked slots
-    const existingAppointments = await Appointment.find({
+    // ENHANCED SLOT VISIBILITY: Get ALL appointments to show slot status
+    const allAppointments = await Appointment.find({
       doctorId,
-      date: appointmentDate,
-      status: { $in: ["pending", "confirmed"] }
+      date: appointmentDate
     });
 
-    // Generate all available slots
+    // Generate all possible slots
     const allSlots = generateAppointmentSlots(doctor, appointmentDate);
+    
+    // Debug logging
+    console.log('Debug - Doctor availability slots:', doctor.availabilitySlots);
+    console.log('Debug - Generated slots for date:', appointmentDate, allSlots);
 
-    // Filter out already booked slots and time slots that are too close for same-day bookings
+    // Create slots with status indicators for frontend - ONLY show available and reserved slots
     const { validateAppointmentTime } = require("../utils/availabilityUtils");
-    const availableSlots = allSlots.filter(slot => {
+    const slotsWithStatus = allSlots.map(slot => {
       const slotTime = `${slot.startTime}-${slot.endTime}`;
       
-      // Check if slot is already booked
-      const isBooked = existingAppointments.some(appointment => appointment.timeSlot === slotTime);
-      if (isBooked) return false;
+      // Find if this slot has any appointment
+      const existingAppointment = allAppointments.find(appointment => appointment.timeSlot === slotTime);
       
-      // Check if slot is too close to current time for same-day bookings
-      //const timeValidation = validateAppointmentTime(appointmentDate, slotTime);
+      let status = 'available';
+      let disabled = false;
+      let statusText = '';
+      let shouldShow = true; // New flag to control visibility
+      
+      if (existingAppointment) {
+        switch (existingAppointment.status) {
+          case 'pending':
+            status = 'reserved';
+            disabled = true;
+            statusText = ' - Reserved by other patient (Not Confirmed)';
+            shouldShow = true; // Show reserved slots
+            break;
+          case 'confirmed':
+            // HIDE confirmed slots completely from patient view
+            shouldShow = false;
+            break;
+          case 'rejected':
+          case 'cancelled':
+          case 'completed':
+            status = 'available';
+            disabled = false;
+            statusText = '';
+            shouldShow = true;
+            break;
+        }
+      }
+      
+      // TIME BUFFER CHECK: Disable slots too close to current time for same-day bookings
       const timeValidation = validateAppointmentTimeWithBuffer(appointmentDate, slotTime);
-      if (!timeValidation.isValid) return false;
+      if (!timeValidation.isValid && shouldShow) {
+        disabled = true;
+        statusText = ' - Too soon (30 min buffer required)';
+      }
       
-      return true;
-    });
+      return {
+        ...slot,
+        status,
+        disabled,
+        statusText,
+        slotTime,
+        shouldShow
+      };
+    }).filter(slot => slot.shouldShow); // Only return slots that should be visible
+
+    // For backward compatibility, also provide availableSlots (only bookable ones)
+    const availableSlots = slotsWithStatus.filter(slot => !slot.disabled);
 
     res.json({
       success: true,
       date: date,
+      allSlotsWithStatus: slotsWithStatus,
       availableSlots: availableSlots,
       totalSlots: allSlots.length,
-      bookedSlots: existingAppointments.length
+      bookedSlots: allAppointments.filter(apt => apt.status === 'pending' || apt.status === 'confirmed').length
     });
 
   } catch (error) {
